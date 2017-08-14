@@ -79,7 +79,7 @@ void compute_accel_schedule(
     else*/
     load_dense_weights(wt, wt_i, o, n_inputs, imgs_per_batch);    // ML: the weights are loaded on the wt_i
     // divide up the kh params
-    Word* kh_i = schedule[idx].kh;
+    //Word* kh_i = schedule[idx].kh;
     /*if (layer_type != LAYER_LAST)
       load_kh (kh, kh_i, o, imgs_per_batch);
     else

@@ -8,7 +8,7 @@
 // input/output data and its size which is handled separately
 struct AccelInfo {
   Word* wt;
-  Word* kh;
+  //Word* kh;
   unsigned n_inputs;
   unsigned n_outputs;
   ap_uint<3> layer_mode;  // [0]='new layer', [2:1]='conv1,conv,dense'

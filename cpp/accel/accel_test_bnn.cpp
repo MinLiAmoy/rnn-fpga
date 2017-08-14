@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     printf ("Give number of character to produce as 1st arg\n");
     return 0;
   }
-  const unsigned n_imgs = std::stoi(argv[1]);
+  const unsigned n_char = std::stoi(argv[1]);
 
   /*const unsigned lconv  = 6;  // last conv
   const unsigned ldense = 8;  // last dense
@@ -100,13 +100,16 @@ int main(int argc, char** argv) {
   //--------------------------------------------------------------
   // Run BNN
   //--------------------------------------------------------------
-  for (unsigned n = 0; n < n_imgs; ++n) {
-    float* data = X.data + n*3*32*32;
-    binarize_input_images(data_i, data, 32);
+  for (unsigned n = 0; n < n_char; ++n) {
+    /*float* data = X.data + n*3*32*32;
+    binarize_input_images(data_i, data, 32);*/
+    
+    // ML:have to define a data_i!
 
     //------------------------------------------------------------
     // Execute conv layers
     //------------------------------------------------------------
+    // ML:8.14
     for (unsigned l = 1; l <= lconv; ++l) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
