@@ -3,15 +3,9 @@
 #include "Timer.h"
 
 static Timer timers[N_LAYERS] = {
-  "xl-FC3",
-  "xl-FC2",
-  "xl-FC1",
-  "xl-Conv6",
-  "xl-Conv5",
-  "xl-Conv4",
-  "xl-Conv3",
-  "xl-Conv2",
-  "xl-Conv1"
+  "xl-FC",
+  "xl-RNN2",
+  "xl-RNN1",
 };
 
 // -----------------------------------------------------------------------
@@ -27,16 +21,21 @@ static Timer timers[N_LAYERS] = {
 // -----------------------------------------------------------------------
 void compute_accel_schedule(
     Word* wt,
-    Word* kh,
+    //Word* kh,   
     unsigned n_inputs,
     unsigned n_outputs,
     unsigned width,
     const ap_uint<2> layer_type,  // 0=conv1, 1=conv, 2=dense
     const ap_uint<1> max_pool,
-    AccelSchedule &schedule
+    AccelSchedule &schedule,
+    unsigned layer_idx
 ) {
   assert (wt != NULL);
-  assert (kh != NULL);
+  //assert (kh != NULL);
+  if layer_is_rnn(layer_idx) {
+    n_inputs = n_inputs + n_outputs;
+    n_outputs = 4*n_outputs;
+  }
   const ap_uint<2> width_mode = width >> 4;
   ap_uint<3> layer_mode = 0;
   layer_mode(2,1) = layer_type(1,0);
@@ -45,14 +44,14 @@ void compute_accel_schedule(
   unsigned width_o = (max_pool==0) ? width : width / 2;
   // imgs_per_batch is the number of output images to compute per batch
   unsigned imgs_per_batch = 0;
-  if (layer_type == LAYER_CONV1 || layer_type == LAYER_CONV)
+  /*if (layer_type == LAYER_CONV1 || layer_type == LAYER_CONV)
     imgs_per_batch = find_conv_batch_size(width, width_o, n_inputs, n_outputs);   // ML: determine how many inputs(fmaps) batch
-
+  */
   // recalculate some values if dense layer
-  if (layer_type == LAYER_DENSE || layer_type == LAYER_LAST) {
-    width_o = 1;
-    imgs_per_batch = find_dense_batch_size(n_inputs, n_outputs);
-  }
+
+  width_o = 1;
+  imgs_per_batch = find_dense_batch_size(n_inputs, n_outputs);
+  
 
   assert (imgs_per_batch != 0);
 
@@ -73,18 +72,19 @@ void compute_accel_schedule(
 
     // now we divide up the weights
     Word* wt_i = schedule[idx].wt;
-    if (layer_type == LAYER_CONV1)
+    /*if (layer_type == LAYER_CONV1)
       load_conv1_weights(wt, wt_i, o, imgs_per_batch);
     else if (layer_type == LAYER_CONV)
       load_conv_weights(wt, wt_i, o, n_inputs, imgs_per_batch);
-    else
-      load_dense_weights(wt, wt_i, o, n_inputs, imgs_per_batch);    // ML: the weights are loaded on the wt_i
+    else*/
+    load_dense_weights(wt, wt_i, o, n_inputs, imgs_per_batch);    // ML: the weights are loaded on the wt_i
     // divide up the kh params
     Word* kh_i = schedule[idx].kh;
-    if (layer_type != LAYER_LAST)
+    /*if (layer_type != LAYER_LAST)
       load_kh (kh, kh_i, o, imgs_per_batch);
     else
       load_kh (kh, kh_i, o, 2*imgs_per_batch);  // ML: the last layer neeed double space
+    */ 
   }
 }
 
@@ -174,19 +174,19 @@ unsigned find_conv_batch_size(unsigned width, unsigned width_o,
 unsigned find_dense_batch_size(unsigned n_inputs, unsigned n_outputs) {
   assert(WT_WORDS*WORD_SIZE >= n_inputs);
   const unsigned wt_bsize = WT_WORDS*WORD_SIZE / n_inputs;
-  const unsigned kh_bsize = KH_WORDS*KH_PER_WORD;
+  //const unsigned kh_bsize = KH_WORDS*KH_PER_WORD;
   unsigned bits_per_batch = DMEM_WORDS*WORD_SIZE;
 
   // adjust output batch size to fit into memories cleanly
   if (bits_per_batch > n_outputs) bits_per_batch = n_outputs;
   if (bits_per_batch > wt_bsize) bits_per_batch = wt_bsize;
-  if (bits_per_batch > kh_bsize) bits_per_batch = kh_bsize;
+  //if (bits_per_batch > kh_bsize) bits_per_batch = kh_bsize;
   while (n_outputs % bits_per_batch != 0) {
     bits_per_batch--;
   }
   assert(bits_per_batch != 0);
 
-  DB_PRINT(0, ">> (Wt, KH) bits batch: (%u %u)\n", wt_bsize, kh_bsize);
+  DB_PRINT(0, ">> (Wt) bits batch: (%u %u)\n", wt_bsize);
   DB_PRINT(0, ">> Final bits batch: %u\n", bits_per_batch);
 
   return bits_per_batch;

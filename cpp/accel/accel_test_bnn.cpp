@@ -13,52 +13,64 @@
 
 int main(int argc, char** argv) {
   if (argc < 2) {
-    printf ("Give number of images to test as 1st arg\n");
+    printf ("Give number of character to produce as 1st arg\n");
     return 0;
   }
   const unsigned n_imgs = std::stoi(argv[1]);
 
-  const unsigned lconv  = 6;  // last conv
+  /*const unsigned lconv  = 6;  // last conv
   const unsigned ldense = 8;  // last dense
   const bool DENSE_LAYER_CPU = getenv("BNN_DENSE_LAYER_CPU") != NULL;   // ML: can be defined above
   const bool LAST_LAYER_CPU = getenv("BNN_LAST_LAYER_CPU") != NULL;
   if (DENSE_LAYER_CPU)
     printf ("## Dense layer CPU is turned on ##\n");
   if (LAST_LAYER_CPU)
-    printf ("## Last layer CPU is turned on ##\n");
+    printf ("## Last layer CPU is turned on ##\n");*/
 
   // print some config numbers
   printf ("* WT_WORDS   = %u\n", WT_WORDS); 
   printf ("* KH_WORDS   = %u\n", KH_WORDS);     // ML: *
 
   // Load input data
-  printf ("## Loading input data ##\n");
+  /*printf ("## Loading input data ##\n");
   Cifar10TestInputs X(n_imgs);    
-  Cifar10TestLabels y(n_imgs);
+  Cifar10TestLabels y(n_imgs);*/
 
   // Load parameters
   printf ("## Loading parameters ##\n");
-  Params params(get_root_dir() + "/params/cifar10_parameters_nb.zip");
+  Params params(get_root_dir() + "/params/rnn_parameters.zip");
 
   // ---------------------------------------------------------------------
   // allocate and binarize all weights
   // ---------------------------------------------------------------------
-  Word* wt[N_LAYERS];
-  Word* kh[N_LAYERS];   // ML: 2 important variable
+  Word* wt[N_LAYERS];   // *ML:double ptr?
+  //Word* b[N_LAYERS];
+  //Word* kh[N_LAYERS];   
   for (unsigned l = 0; l < N_LAYERS; ++l) {
     const unsigned M = M_tab[l];
     const unsigned N = N_tab[l];
-    if (layer_is_conv(l+1))
+    /*if (layer_is_conv(l+1))
       wt[l] = new Word[WTS_TO_WORDS(M*N)];    // ML: roughly a word contains 7 binarized 3*3 conv param.
+    else*/
+    if (layer_is_rnn(l+1))
+      wt[l] = new Word[4N*(M+N)/WORD_SIZE];
     else
-      wt[l] = new Word[M*N / WORD_SIZE];    // ML: dense layer...
-    const float* weights = params.float_data(widx_tab[l]);
-    set_weight_array(wt[l], weights, l+1);    // ML: conv:-1->-1, 1->1; dense: -1->1, 1->0
+      wt[l] = new Word[M*N/WORD_SIZE];    // ML: RNN layers
 
-    kh[l] = new Word[N/KH_PER_WORD * sizeof(Word)];   // ML: * why op *sizeof(Word)? bug! when it comes to last layer, the size is N/2 but not N
+    if (layer_is_rnn(l+1)) {
+      for (unsigned w_l = 0; w_l < N_W_LAYERS; ++w_l) {
+        const float* weights = params.float_data(widx_tab[l*N_W_LAYERS+w_l]);
+        set_weight_array_rnn(wt[l], weights, l+1, w_l);
+      }
+    } else {
+      const float* weights = params.float_data(widx_tab[16]);
+      set_weight_array(wt[l], weights, l+1);    // 
+    }
+
+    /*kh[l] = new Word[N/KH_PER_WORD * sizeof(Word)];   // ML: * why op *sizeof(Word)? bug! when it comes to last layer, the size is N/2 but not N
     const float* k = params.float_data(kidx_tab[l]);
     const float* h = params.float_data(hidx_tab[l]);
-    set_bnorm_array(kh[l], k, h, l+1);
+    set_bnorm_array(kh[l], k, h, l+1);*/
   }
 
   // ---------------------------------------------------------------------
@@ -69,7 +81,7 @@ int main(int argc, char** argv) {
     compute_accel_schedule(
         wt[l], kh[l],
         M_tab[l], N_tab[l], S_tab[l], T_tab[l], pool_tab[l],
-        layer_sched[l]
+        layer_sched[l], l
     );
   }
 

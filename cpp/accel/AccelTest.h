@@ -6,22 +6,32 @@
 #include "AccelPrint.h"
 #include <cstdlib>
 
-const unsigned N_LAYERS = 9;
-const unsigned L_CONV = 6;
+const unsigned N_LAYERS = 3;
+const unsigned N_W_LAYERS = 8;
+/*const unsigned L_CONV = 6;
 const unsigned S_tab[] =  { 32,  32,  16,  16,   8,   8,    4,    1,    1,   1};    // ML: dim of output
 const unsigned M_tab[] =  {  3, 128, 128, 256, 256, 512, 8192, 1024, 1024};
 const unsigned N_tab[] =  {128, 128, 256, 256, 512, 512, 1024, 1024,   10};     // ML: the dim of inputs and outputs
 const unsigned T_tab[] =  {  0,   1,   1,   1,   1,   1,    2,    2,    3};     // ML: the idx of LayerTypeEnum to the sequential layers
-// ML: n_file in param arc is 26
-const unsigned widx_tab[] = {0,   3,   6,   9,  12,  15,   18,   21,   24};     // ML: the idx of weights array in arc
+*/
+const unsigned S_tab[] =  {  1,   1,   1};
+const unsigned M_tab[] =  { 27, 256, 256};
+const unsigned N_tab[] =  {256, 256,  27};
+const unsigned T_tab[] =  {  0,   1,   2};
+const unsigned widx_tab[] = {  0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 20, 21, 22, 23, 24, 25, 36}//ML: need to be modifed. the dim should be N_W_LAYERS*N_LAYERS
+
+// ML: n_file in param arc is 29
+/*const unsigned widx_tab[] = {0,   3,   6,   9,  12,  15,   18,   21,   24};     // ML: the idx of weights array in arc
 const unsigned kidx_tab[] = {1,   4,   7,  10,  13,  16,   19,   22,   25};     // ML: the idx of k array in arc
 const unsigned hidx_tab[] = {2,   5,   8,  11,  14,  17,   20,   23,   26};     // ML: the idx of h array in arc
-const unsigned pool_tab[] = {0,   1,   0,   1,   0,   1,    0,    0,    0};
+const unsigned pool_tab[] = {0,   1,   0,   1,   0,   1,    0,    0,    0};*/
+
 
 // layer_idx goes from 1 to 9
-bool layer_is_conv(unsigned layer_idx);
+bool layer_is_rnn(unsigned layer_idx);
+/*bool layer_is_conv(unsigned layer_idx);
 bool layer_is_binconv(unsigned layer_idx);
-bool layer_is_fpconv(unsigned layer_idx);
+bool layer_is_fpconv(unsigned layer_idx);*/
 bool layer_is_last(unsigned layer_idx);
 bool layer_wt_size(unsigned layer_idx);
 bool layer_kh_size(unsigned layer_idx);
@@ -46,6 +56,7 @@ void set_bit_array(T1 array[], const T2* data, unsigned size) {
 // Functions used to preprocess params and inputs
 //------------------------------------------------------------------------
 void set_weight_array(Word* w, const float* wts, unsigned layer_idx);
+void set_weight_array_rnn(Word* w, const float* wts, unsigned layer_idx, unsigned weight_idx);
 void set_conv_weight_array(Word* w, const float* wts, unsigned size);
 void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N);
 

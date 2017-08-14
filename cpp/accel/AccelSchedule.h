@@ -17,12 +17,12 @@ struct AccelInfo {
 
   AccelInfo() {
     wt = new Word[WT_WORDS];
-    kh = new Word[KH_WORDS];
+    //kh = new Word[KH_WORDS];
   }
 
   ~AccelInfo() {
     delete[] wt;
-    delete[] kh;
+    //delete[] kh;
   }
 };
 
@@ -36,7 +36,8 @@ void compute_accel_schedule(
     unsigned width,
     const ap_uint<2> layer_type,  // 0=conv1, 1=conv, 2=dense
     const ap_uint<1> max_pool,
-    AccelSchedule &schedule
+    AccelSchedule &schedule,
+    unsigned layer_idx
 );
 
 void run_accel_schedule(

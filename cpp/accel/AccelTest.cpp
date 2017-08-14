@@ -7,6 +7,11 @@
 // Helper functions
 //------------------------------------------------------------------------
 
+bool layer_is_rnn(unsigned layer_idx) {
+  assert(layer_idx != 0 && layer_idx <= N_LAYERS);
+  return T_tab[layer_idx-1] == LAYER_RNN1 || T_tab[layer_idx-1] == LAYER_RNN2;
+}
+/*
 bool layer_is_conv(unsigned layer_idx) {
   return layer_is_binconv(layer_idx) || layer_is_fpconv(layer_idx);
 }
@@ -17,7 +22,7 @@ bool layer_is_binconv(unsigned layer_idx) {
 bool layer_is_fpconv(unsigned layer_idx) {
   assert(layer_idx != 0 && layer_idx <= N_LAYERS);
   return T_tab[layer_idx-1] == LAYER_CONV1;
-}
+}*/
 bool layer_is_last(unsigned layer_idx) {
   assert(layer_idx != 0 && layer_idx <= N_LAYERS);
   return T_tab[layer_idx-1] == LAYER_LAST;
@@ -50,11 +55,22 @@ void set_weight_array(Word* w, const float* wts, unsigned layer_idx) {
   const unsigned M = M_tab[layer_idx-1];
   const unsigned N = N_tab[layer_idx-1];
 
-  if (layer_is_conv(layer_idx)) {
-    set_conv_weight_array(w, wts, M*N);
+  set_dense_weight_array(w, wts, M, N);
+}
+
+void set_weight_array_rnn(Word* w, const float* wts, unsigned layer_idx, unsigned weight_idx) {
+  const unsigned M = M_tab[layer_idx-1];
+  const unsigned N = N_tab[layer_idx-1];
+
+  if ((weight_idx / 4) == 0) {
+    idx = M * N * weight_idx / WORD_SIZE;   // ML: assume N = 128, than it's power of 2
+    //off = M*N*weight_idx%WORD_SIZE;
+    set_dense_weight_array(w[idx], wts, M, N);
   } else {
-    set_dense_weight_array(w, wts, M, N);
+    idx = M * N * 4 / WORD_SIZE + N * N * (weight_idx-4) / WORD_SIZE;
+    set_dense_weight_array(w[idx], wts, N, N);
   }
+  
 }
 
 void set_conv_weight_array(Word* w, const float* wts, unsigned size) {
@@ -77,7 +93,7 @@ void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N) {
       Word wrd = 0;
       for (unsigned b = 0; b < WORD_SIZE; ++b) {
         wrd[b] = ((wts[(m+b)*N+n] < 0) ? 1 : 0);
-      }
+      }   // ML: why this loop?
       w[w_idx] = wrd;
       ++w_idx;
     }

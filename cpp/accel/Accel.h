@@ -22,6 +22,11 @@
 //-------------------------------------------------------------------
 // Constants
 //-------------------------------------------------------------------
+
+// ML: define
+const unsigned Hid_SIZE = 256;
+//
+
 const unsigned CONVOLVERS = 2;
 
 const unsigned WORD_SIZE = 64;
@@ -54,8 +59,10 @@ const unsigned CONV_BANKS = WORD_SIZE / BANK_WIDTH;
 //-------------------------------------------------------------------
 // Typedefs
 //-------------------------------------------------------------------
-enum LayerTypeEnum {LAYER_CONV1, LAYER_CONV, LAYER_DENSE, LAYER_LAST};    // ML: project to 0,1,2,3
-
+//enum LayerTypeEnum {LAYER_CONV1, LAYER_CONV, LAYER_DENSE, LAYER_LAST};    // ML: project to 0,1,2,3
+// ML: define
+enum RLayerTyprEnum {LAYER_RNN1, LAYER_RNN2, LAYER_LAST};
+//
 typedef ap_int<WORD_SIZE> Word;
 typedef ap_int<WT_SIZE> WtType;   // ML: WtType ... ap_int<9>
 typedef ap_uint<16> Address;
