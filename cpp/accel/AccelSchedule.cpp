@@ -25,7 +25,7 @@ void compute_accel_schedule(
     unsigned n_inputs,
     unsigned n_outputs,
     unsigned width,
-    const ap_uint<2> layer_type,  // 0=conv1, 1=conv, 2=dense
+    const ap_uint<2> layer_type,  // 0=rnn1, 1=rnn2, 2=dense
     const ap_uint<1> max_pool,
     AccelSchedule &schedule,
     unsigned layer_idx

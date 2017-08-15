@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
   }
 
   // allocate memories for data i/o for the accelerator
-  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );
+  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );   // ML: need to be modified!
   Word* data_o  = (Word*) MEM_ALLOC( DMEM_O_WORDS * sizeof(Word) );
   if (!data_i || !data_o) {
     fprintf (stderr, "**** ERROR: Alloc failed in %s\n", __FILE__);
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
   unsigned n_errors = 0;
 
-  printf ("## Running BNN for %d images\n", n_imgs);
+  printf ("## Running BNN for %d characters\n", n_char);
 
   //--------------------------------------------------------------
   // Run BNN
@@ -109,7 +109,6 @@ int main(int argc, char** argv) {
     //------------------------------------------------------------
     // Execute conv layers
     //------------------------------------------------------------
-    // ML:8.14
     for (unsigned l = 1; l <= lconv; ++l) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
