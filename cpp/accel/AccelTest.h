@@ -15,8 +15,8 @@ const unsigned N_tab[] =  {128, 128, 256, 256, 512, 512, 1024, 1024,   10};     
 const unsigned T_tab[] =  {  0,   1,   1,   1,   1,   1,    2,    2,    3};     // ML: the idx of LayerTypeEnum to the sequential layers
 */
 const unsigned S_tab[] =  {  1,   1,   1,  1};
-const unsigned M_tab[] =  { 65, 256, 256};
-const unsigned N_tab[] =  {256, 256,  65};
+const unsigned M_tab[] =  { 64, 128, 128};
+const unsigned N_tab[] =  {128, 128,  64};
 const unsigned T_tab[] =  {  0,   1,   2};
 const unsigned widx_tab[] = {  0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 20, 21, 22, 23, 24, 25, 36}//ML: need to be modifed. the dim should be N_W_LAYERS*N_LAYERS
 

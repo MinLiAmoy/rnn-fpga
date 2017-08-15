@@ -24,7 +24,7 @@
 //-------------------------------------------------------------------
 
 // ML: define
-const unsigned Hid_SIZE = 256;
+const unsigned Hid_SIZE = 128;
 //
 
 const unsigned CONVOLVERS = 2;

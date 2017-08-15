@@ -735,10 +735,10 @@ void top(
     assert(n_inputs*WT_SIZE <= WT_WORDS*WORD_SIZE);
   }
 
-  static Word dmem[2][CONVOLVERS][C_DMEM_WORDS];
-  static Word kh_mem[KH_WORDS];
-  static Word wt_mem[CONVOLVERS][C_WT_WORDS];
-  static Address kh_index = 0;
+  static Word dmem[2][5][HIDDEN_SIZE/DATA_PER_WORD];
+  //static Word kh_mem[KH_WORDS];
+  //static Word wt_mem[CONVOLVERS][C_WT_WORDS];
+  //static Address kh_index = 0;
   static Address o_index = 0;
 
   if (layer_mode[0]) {
