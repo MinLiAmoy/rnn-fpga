@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------
   // allocate and binarize all weights
   // ---------------------------------------------------------------------
-  Word* wt[N_LAYERS];   // *ML:double ptr?
+  Word* wt[N_LAYERS];   // *ML: need to be modified
   //Word* b[N_LAYERS];
   //Word* kh[N_LAYERS];   
   for (unsigned l = 0; l < N_LAYERS; ++l) {
@@ -100,6 +100,18 @@ int main(int argc, char** argv) {
   //--------------------------------------------------------------
   // Run BNN
   //--------------------------------------------------------------
+
+  // ML: load an arbitrary input character [1, 0. 0, ..., 0]
+  for (unsigned i = 0; i < 64/DATA_PER_WORD; ++i) {
+    if (i == 0) {
+      data_i[i] = 0;
+      DATA start_seed = 1;
+      data_i[i](15,0) = start_seed(15,0);
+    } else {
+      data[i] = 0;
+    }
+  }
+
   for (unsigned n = 0; n < n_char; ++n) {
     /*float* data = X.data + n*3*32*32;
     binarize_input_images(data_i, data, 32);*/
@@ -109,7 +121,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------------
     // Execute conv layers
     //------------------------------------------------------------
-    for (unsigned l = 1; l <= lconv; ++l) {
+    /*for (unsigned l = 1; l <= lconv; ++l) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
       const unsigned S = S_tab[l-1];
@@ -124,34 +136,24 @@ int main(int argc, char** argv) {
           l % 2,      // mem_mode
           layer_sched[l-1]
       );
-    }
+    }*/
 
     //------------------------------------------------------------
     // Execute dense layers
     //------------------------------------------------------------
-    for (unsigned l = lconv+1; l <= ldense; ++l) {
+    for (unsigned l = 1; l <= 2; ++l) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
 
-      if (DENSE_LAYER_CPU) {
-        for (unsigned i = 0; i < M/WORD_SIZE; ++i)
-          data_i[i] = data_o[i];
-
-        dense_layer_cpu(
-            wt[l-1], params.float_data(3*l-2), params.float_data(3*l-1),
-            data_i, data_o, M, N
-        );
-
-      } else {
-        run_accel_schedule(
-            data_i, data_o,
-            l-1,
-            0,    // input_words
-            (l==ldense && LAST_LAYER_CPU) ? 1024/WORD_SIZE : 0,
-            l % 2,
-            layer_sched[l-1]
-        );
-      }
+    run_accel_schedule(
+      data_i, data_o,
+      l-1,
+      0,    // input_words
+      (l==ldense && LAST_LAYER_CPU) ? 1024/WORD_SIZE : 0,
+      l % 2,
+      layer_sched[l-1]
+    );  
+    
     }
 
     //------------------------------------------------------------

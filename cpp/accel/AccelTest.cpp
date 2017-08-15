@@ -93,7 +93,7 @@ void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N) {
       Word wrd = 0;
       for (unsigned b = 0; b < WORD_SIZE; ++b) {
         wrd[b] = ((wts[(m+b)*N+n] < 0) ? 1 : 0);
-      }   // ML: why this loop?
+      }   
       w[w_idx] = wrd;
       ++w_idx;
     }

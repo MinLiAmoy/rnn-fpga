@@ -41,9 +41,13 @@ const unsigned C_WT_WORDS   = ((WT_L+CONV_W_PER_WORD-1)/CONV_W_PER_WORD + CONVOL
 const unsigned WT_WORDS     = C_WT_WORDS*CONVOLVERS;
 const unsigned KH_WORDS     = WT_L/128*16 / WORD_SIZE;
 
-const unsigned DMEM_WORDS   = 128*32*32 / WORD_SIZE;    // ML: input data memory words, 128*32*32 is the largest data size(the second layer input)
+//const unsigned DMEM_WORDS   = 128*32*32 / WORD_SIZE;    // ML: input data memory words, 128*32*32 is the largest data size(the second layer input)
+// ML
+const unsigned DMEM_WORDS = 64/DATA_PER_WORD;
+const unsigned DMEM_O_WORDS = 64/DATA_PER_WORD; // ML: may need to modified again
+
 const unsigned C_DMEM_WORDS = DMEM_WORDS / CONVOLVERS;
-const unsigned DMEM_O_WORDS = 512*4*4 / WORD_SIZE;    // ML: output data memory words, 512*4*4 is the last conv layer output data size 
+//const unsigned DMEM_O_WORDS = 512*4*4 / WORD_SIZE;    // ML: output data memory words, 512*4*4 is the last conv layer output data size 
 const unsigned DB_MEM_WORDS = 32*32;
 
 const unsigned PIX_PER_PHASE = 2*32*32;
@@ -55,6 +59,9 @@ const unsigned LOG_BANK_WIDTH = 3;
 const unsigned CONV_ROWS = 3;
 const unsigned CONV_COLS = BANK_WIDTH+2;    // ML: 2->0 padding
 const unsigned CONV_BANKS = WORD_SIZE / BANK_WIDTH;
+
+const unsigned DATA_SIZE = 16;
+const unsigned DATA_PER_WORD = 4;
 
 //-------------------------------------------------------------------
 // Typedefs
@@ -77,6 +84,8 @@ typedef ap_fixed<16,12> DenseNorm;
 typedef ap_fixed<20,2, AP_RND> C1InputType;  // ML: input pixel are 20-bit fixed-point
 typedef ap_fixed<24,6, AP_RND> C1ConvType;
 
+// ML:define
+typedef ap_fixed<16,2, AP_RND> DATA;    // ML:maybe should use 3 20bit data per word!
 
 //-------------------------------------------------------------------
 // Template functions
