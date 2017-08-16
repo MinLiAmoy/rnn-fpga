@@ -32,10 +32,10 @@ void compute_accel_schedule(
 ) {
   assert (wt != NULL);
   //assert (kh != NULL);
-  if layer_is_rnn(layer_idx) {
+  /*if layer_is_rnn(layer_idx) {
     n_inputs = n_inputs + n_outputs;
     n_outputs = 4*n_outputs;
-  }
+  }*/
   //const ap_uint<2> width_mode = width >> 4;
   ap_uint<3> layer_mode = 0;
   layer_mode(2,1) = layer_type(1,0);
@@ -79,7 +79,7 @@ void compute_accel_schedule(
     else if (layer_type == LAYER_CONV)
       load_conv_weights(wt, wt_i, o, n_inputs, imgs_per_batch);
     else*/
-    load_dense_weights(wt, wt_i, o, n_inputs, n_outputs);    // ML: the weights are loaded on the wt_i
+    load_dense_weights(wt, wt_i, o, n_inputs+n_outputs, 4*n_outputs);    // ML: the weights are loaded on the wt_i
     // divide up the kh params
     //Word* kh_i = schedule[idx].kh;
     /*if (layer_type != LAYER_LAST)

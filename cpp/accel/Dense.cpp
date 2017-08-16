@@ -70,19 +70,42 @@ void dense_layer_cpu(
     unsigned layer_idx,
     const Address inputs_words,
     const Address outputs_words,
-    ap_uint<1> dmem_mode
+    //ap_uint<1> dmem_mode
     AccelSchedule& s 
 ) {
   //t_dense.start();
-  static Word dmem[2][6][HIDDEN_STATE/DATA_PER_WORD] = {0};
+  static Word dmem[5][HIDDEN_STATE/DATA_PER_WORD] = {0};
 
-  if inp
+  
 
   M = s.n_inputs;
-  N = s.n_inputs;
+  N = s.n_outputs;
 
   ap_uint<1> d_i_idx = dmem_mode;
   ap_uint<1> d_o_idx = ~dmem_mode;
+
+  Word in[(M+N)/DATA_PER_WORD];
+  Word gate[4*N/DATA_PER_WORD];
+
+  if (layer_idx < 2) {
+    for (unsigned i = 0; i < N+M; i++) {
+      if ((i < N) & (layer_idx == 0) & (inputs_words != 0) ) {
+        in[i/DATA_PER_WORD] = data_i[i/DATA_PER_WORD];
+      }
+      else if ((i<N) & (layer_idx == 0) & (inputs_words == 0)) {
+        in[i/DATA_PER_WORD] = dmem[0][i/DATA_PER_WORD];
+      }
+      else if ((i < N) & (layer_idx == 1)) {
+        in[i/DATA_PER_WORD] = dmem[1][i/DATA_PER_WORD]; // *ML:is d_i_idx?
+      }
+      else if ((i >= N) & (layer_idx == 0)) {
+        in[i/DATA_PER_WORD] = dmem[1][(i-N)/DATA_PER_WORD];
+      }
+      else{
+        in[i/DATA_PER_WORD] = dmem[3][(i-N)/DATA_PER_WORD];
+      }
+    }
+  }
   
   static Word* wt_i = (Words*) MEM_ALLOC( WT_WORDS*sizeof(Word));
 
@@ -99,19 +122,22 @@ void dense_layer_cpu(
         if (res < 0)
           out_wrd[nb] = 1;*/
       }
-      data_o[n/WORD_SIZE/DATA_PER_WORD] = out_wrd;
+      data_o[n/DATA_PER_WORD] = out_wrd;
+      dmem[0][n/DATA_PER_WORD] = out_wrd;
     }
   } else {
-    for (unsigned n = 0; n < N; n+=WORD_SIZE) {
+    for (unsigned n = 0; n < 4*N; n+=WORD_SIZE) {
       Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
-        DATA sum = dotproduct_m(dmem[d_i_idx][3], wt_i, M, n+nb);
+        DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
         out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
         /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
         if (res < 0)
           out_wrd[nb] = 1;*/
       }
-      
+      gate[n]
+
+
     }
   }
 

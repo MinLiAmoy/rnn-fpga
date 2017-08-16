@@ -148,9 +148,9 @@ int main(int argc, char** argv) {
     dense_layer_cpu(
       data_i, data_o,
       l-1,
-      (l==1) ? (64/DATA_PER_WORD) : 0,    // input_words
+      (n==1) ? (64/DATA_PER_WORD) : 0,    // input_words
       (l==3) ? (64/DATA_PER_WORD) : 0,
-      l % 2,
+      //l % 2,
       layer_sched[l-1]
     );  
     
