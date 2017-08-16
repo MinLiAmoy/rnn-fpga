@@ -43,29 +43,31 @@ void compute_accel_schedule(
   // for conv layers
   //unsigned width_o = (max_pool==0) ? width : width / 2;
   // imgs_per_batch is the number of output images to compute per batch
-  unsigned imgs_per_batch = 0;
+  //unsigned imgs_per_batch = 0;
   /*if (layer_type == LAYER_CONV1 || layer_type == LAYER_CONV)
     imgs_per_batch = find_conv_batch_size(width, width_o, n_inputs, n_outputs);   // ML: determine how many inputs(fmaps) batch
   */
   // recalculate some values if dense layer
 
   //width_o = 1;
-  imgs_per_batch = find_dense_batch_size(n_inputs, n_outputs);
+  // ML: canceal the batch 
+  //imgs_per_batch = find_dense_batch_size(n_inputs, n_outputs);
   
 
-  assert (imgs_per_batch != 0);
+  //assert (imgs_per_batch != 0);
 
-  unsigned n_batches = n_outputs / imgs_per_batch;
-  schedule.resize(n_batches);   // ML: seems like n_batched same copy, schedule haven't been assigned
+  //unsigned n_batches = n_outputs / imgs_per_batch;
+  //schedule.resize(n_batches);   // ML: seems like n_batched same copy, schedule haven't been assigned
 
   // divide up the weights according to the value of imgs_per_batch
-  unsigned idx = 0;
-  for (unsigned o = 0; o < n_outputs; o+=imgs_per_batch, idx++) {
-    layer_mode[0] = (o==0) ? 1 : 0;   // ML: layer_mode(1)=1-> new layers
+  //unsigned idx = 0;
+  //for (unsigned o = 0; o < n_outputs; o+=imgs_per_batch, idx++) {
+    //layer_mode[0] = (o==0) ? 1 : 0;   // ML: layer_mode(1)=1-> new layers
+    layer_mode[0] = 1;
 
     // add a new invocation to the schedule
     schedule[idx].n_inputs = n_inputs;    // ML: n_input has been modified
-    schedule[idx].n_outputs = imgs_per_batch;
+    schedule[idx].n_outputs = n_outputs;
     schedule[idx].layer_mode = layer_mode;
     //schedule[idx].width_mode = width_mode;
     //schedule[idx].norm_mode = max_pool + 1;
@@ -77,7 +79,7 @@ void compute_accel_schedule(
     else if (layer_type == LAYER_CONV)
       load_conv_weights(wt, wt_i, o, n_inputs, imgs_per_batch);
     else*/
-    load_dense_weights(wt, wt_i, o, n_inputs, imgs_per_batch);    // ML: the weights are loaded on the wt_i
+    load_dense_weights(wt, wt_i, o, n_inputs, n_outputs);    // ML: the weights are loaded on the wt_i
     // divide up the kh params
     //Word* kh_i = schedule[idx].kh;
     /*if (layer_type != LAYER_LAST)
@@ -85,7 +87,7 @@ void compute_accel_schedule(
     else
       load_kh (kh, kh_i, o, 2*imgs_per_batch);  // ML: the last layer neeed double space
     */ 
-  }
+  
 }
 
 // -----------------------------------------------------------------------
@@ -108,7 +110,7 @@ void run_accel_schedule(
     exit(-2);
   }
 
-  const unsigned N = s.size();
+  const unsigned  N = s.size();
   const unsigned LAYERS = 3;
 
   // Invoke accelerator once for each element in the schedule
