@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
 
-    run_accel_schedule(
+    dense_layer_cpu(
       data_i, data_o,
       l-1,
       (l==1) ? (64/DATA_PER_WORD) : 0,    // input_words

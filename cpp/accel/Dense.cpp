@@ -20,14 +20,21 @@ int dotproduct_m(
     const unsigned n
 ) {
   assert (M % WORD_SIZE == 0);
-  int sum = 0;
+  DATA sum = 0;
 
   // Loop across in the inputs in batches of WORD_SIZE
   for (unsigned m = 0; m < M; m+=WORD_SIZE) {
-    const Word in_wrd = in[m/WORD_SIZE];
+
+    DATA *in_wrd;
+    for (unsigned i = 0; i < WORD_SIZE; ++DATA_PER_WORD) {
+      in_wrd[i](15,0)   = in[(m + i)/4](15,0);
+      in_wrd[i+1](15,0) = in[(m + i)/4](31,16);
+      in_wrd[i+2](15,0) = in[(m + i)/4](47,32);
+      in_wrd[i+3](15,0) = in[(m + i)/4](63,48);
+    }
     const Word wt_wrd = w[(n*M+m)/WORD_SIZE];
 
-    Word x = wt_wrd ^ in_wrd;
+    /*Word x = wt_wrd ^ in_wrd;
 
     // count_set bit for 64 bits, returns 2*cnt
     x -= (x >> 1) & m1;
@@ -38,7 +45,13 @@ int dotproduct_m(
     x += x >> 32;
     x = x & 0x7f;
 
-    sum += WORD_SIZE - (x<<1).to_int();
+    sum += WORD_SIZE - (x<<1).to_int();*/
+    for (i = 0; i < WORD_SIZE; ++i) {
+      if (wt_wrd[i] > 0)
+        sum += DATA[i];
+      else
+        sum -= DATA[i];
+    }
   }
   return sum;
 }
@@ -47,30 +60,76 @@ int dotproduct_m(
 // Internal dense layer
 // -----------------------------------------------------------------------
 // ML: k, h is the coefficient of BNN!
-// MK: the size of in is x*word_size = M; the size of out is x*word_size = N!
+// ML: the size of in is M*DATA_PER_WORD = 4M words; the size of out is N*DATA_PER_WORD!
 void dense_layer_cpu(
-    const Word*  wt,
-    const float* k_data,
-    const float* h_data,
-    const Word* in,
-    Word* out,
-    const unsigned M,
-    const unsigned N
+    //const Word*  wt,
+    //const float* k_data,
+    //const float* h_data,
+    const Word* data_i,
+    Word* data_o,
+    unsigned layer_idx,
+    const Address inputs_words,
+    const Address outputs_words,
+    ap_uint<1> dmem_mode
+    AccelSchedule& s 
 ) {
-  t_dense.start();
+  //t_dense.start();
+  static Word dmem[2][6][HIDDEN_STATE/DATA_PER_WORD] = {0};
 
-  for (unsigned n = 0; n < N; n+=WORD_SIZE) {
-    Word out_wrd = 0;
-    for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
-      int sum = dotproduct_m(in, wt, M, n+nb);
-      float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
-      if (res < 0)
-        out_wrd[nb] = 1;
+  if inp
+
+  M = s.n_inputs;
+  N = s.n_inputs;
+
+  ap_uint<1> d_i_idx = dmem_mode;
+  ap_uint<1> d_o_idx = ~dmem_mode;
+  
+  static Word* wt_i = (Words*) MEM_ALLOC( WT_WORDS*sizeof(Word));
+
+  for (unsigned j = 0; j < WT_WORDS; ++j)
+      wt_i[j] = s.wt[j];
+
+  if (layer_idx == LAYER_LAST){
+    for (unsigned n = 0; n < N; n+=WORD_SIZE) {
+      Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+      for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
+        DATA sum = dotproduct_m(dmem[d_i_idx][3], wt_i, M, n+nb);
+        out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
+        /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
+        if (res < 0)
+          out_wrd[nb] = 1;*/
+      }
+      data_o[n/WORD_SIZE/DATA_PER_WORD] = out_wrd;
     }
-    out[n/WORD_SIZE] = out_wrd;
+  } else {
+    for (unsigned n = 0; n < N; n+=WORD_SIZE) {
+      Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+      for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
+        DATA sum = dotproduct_m(dmem[d_i_idx][3], wt_i, M, n+nb);
+        out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
+        /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
+        if (res < 0)
+          out_wrd[nb] = 1;*/
+      }
+      
+    }
   }
 
-  t_dense.stop();
+
+
+  for (unsigned n = 0; n < N; n+=WORD_SIZE) {
+    Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+    for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
+      DATA sum = dotproduct_m(in, wt, M, n+nb);
+      out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
+      /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
+      if (res < 0)
+        out_wrd[nb] = 1;*/
+    }
+    out[n/WORD_SIZE/DATA_PER_WORD] = out_wrd;
+  }
+
+  //t_dense.stop();
 }
 
 // -----------------------------------------------------------------------
