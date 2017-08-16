@@ -79,8 +79,8 @@ int main(int argc, char** argv) {
   AccelSchedule layer_sched[N_LAYERS];
   for (unsigned l = 0; l < N_LAYERS; ++l) {
     compute_accel_schedule(
-        wt[l], kh[l],
-        M_tab[l], N_tab[l], S_tab[l], T_tab[l], pool_tab[l],
+        wt[l], 
+        M_tab[l], N_tab[l], T_tab[l],
         layer_sched[l], l
     );
   }
@@ -141,15 +141,15 @@ int main(int argc, char** argv) {
     //------------------------------------------------------------
     // Execute dense layers
     //------------------------------------------------------------
-    for (unsigned l = 1; l <= 2; ++l) {
+    for (unsigned l = 1; l <= 3; ++l) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
 
     run_accel_schedule(
       data_i, data_o,
       l-1,
-      0,    // input_words
-      (l==ldense && LAST_LAYER_CPU) ? 1024/WORD_SIZE : 0,
+      (l==1) ? (64/DATA_PER_WORD) : 0,    // input_words
+      (l==3) ? (64/DATA_PER_WORD) : 0,
       l % 2,
       layer_sched[l-1]
     );  
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
     // Execute last layer
     //------------------------------------------------------------
     int prediction = -1;
-    if (DENSE_LAYER_CPU || LAST_LAYER_CPU) {
+    /*if (DENSE_LAYER_CPU || LAST_LAYER_CPU) {
       prediction = last_layer_cpu(
           wt[ldense],
           params.float_data(kidx_tab[ldense]),
@@ -175,11 +175,11 @@ int main(int argc, char** argv) {
           0, 1,
           1,
           layer_sched[ldense]
-      );
+      );*/
       ap_int<8> p = 0;
       p(7,0) = data_o[0](7,0);
       prediction = p.to_int();
-    }
+    
 
     //assert(prediction >= 0 && prediction <= 9);
     int label = y.data[n];

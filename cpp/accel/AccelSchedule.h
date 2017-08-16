@@ -12,8 +12,8 @@ struct AccelInfo {
   unsigned n_inputs;
   unsigned n_outputs;
   ap_uint<3> layer_mode;  // [0]='new layer', [2:1]='conv1,conv,dense'
-  ap_uint<2> width_mode;  // 0=8'b, 1=16'b, 2=32'b
-  ap_uint<2> norm_mode;   // 0='do nothing', 1='do norm', 2='do pool'
+  //ap_uint<2> width_mode;  // 0=8'b, 1=16'b, 2=32'b
+  //ap_uint<2> norm_mode;   // 0='do nothing', 1='do norm', 2='do pool'
 
   AccelInfo() {
     wt = new Word[WT_WORDS];
@@ -30,12 +30,12 @@ typedef std::vector<AccelInfo> AccelSchedule;
 
 void compute_accel_schedule(
     Word* wt,
-    Word* kh,
+    //Word* kh,
     unsigned n_inputs,
     unsigned n_outputs,
-    unsigned width,
+    //unsigned width,
     const ap_uint<2> layer_type,  // 0=conv1, 1=conv, 2=dense
-    const ap_uint<1> max_pool,
+    //const ap_uint<1> max_pool,
     AccelSchedule &schedule,
     unsigned layer_idx
 );

@@ -36,9 +36,11 @@ const unsigned CONV1_W_PER_WORD = 4;
 const unsigned KH_PER_WORD = 4;   // ML: 4 -k/h per word
 const unsigned BYTE_SIZE = 8;
 const unsigned K = 3;
-const unsigned WT_L         = 16*4*512; // parameter to control wt mem size
+const unsigned WT_L         = (128 + 128)*4*128; // parameter to control wt mem size
 const unsigned C_WT_WORDS   = ((WT_L+CONV_W_PER_WORD-1)/CONV_W_PER_WORD + CONVOLVERS-1) / CONVOLVERS;  // wt words per convolver
-const unsigned WT_WORDS     = C_WT_WORDS*CONVOLVERS;
+//const unsigned WT_WORDS     = C_WT_WORDS*CONVOLVERS;
+const unsigned WT_WORDS = (128 + 128) * 4 * 128/ WORD_SIZE; // ML: beyond the mem on chip?
+
 const unsigned KH_WORDS     = WT_L/128*16 / WORD_SIZE;
 
 //const unsigned DMEM_WORDS   = 128*32*32 / WORD_SIZE;    // ML: input data memory words, 128*32*32 is the largest data size(the second layer input)
@@ -116,7 +118,7 @@ void load_kh(T& comp, const Word kh_mem[KH_WORDS], Address idx) {
 #pragma SDS data data_mover(wt_i:AXIDMA_SIMPLE, kh_i:AXIDMA_SIMPLE)
 void top(
     Word wt_i[WT_WORDS],
-    Word kh_i[KH_WORDS],
+    //Word kh_i[KH_WORDS],
     Word dmem_i[DMEM_WORDS],
     Word dmem_o[DMEM_O_WORDS],
     const Address    n_inputs,
@@ -125,8 +127,8 @@ void top(
     const Address    output_words,
     const ap_uint<3> layer_mode,  // [0]='new layer', [2:1]='conv1,conv,dense'
     const ap_uint<1> dmem_mode,   // 0 means dmem[0] is input
-    const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
-    const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'
+    //const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
+    //const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'
 );
 
 #endif

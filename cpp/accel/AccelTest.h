@@ -14,7 +14,7 @@ const unsigned M_tab[] =  {  3, 128, 128, 256, 256, 512, 8192, 1024, 1024};
 const unsigned N_tab[] =  {128, 128, 256, 256, 512, 512, 1024, 1024,   10};     // ML: the dim of inputs and outputs
 const unsigned T_tab[] =  {  0,   1,   1,   1,   1,   1,    2,    2,    3};     // ML: the idx of LayerTypeEnum to the sequential layers
 */
-const unsigned S_tab[] =  {  1,   1,   1,  1};
+//const unsigned S_tab[] =  {  1,   1,   1,  1};
 const unsigned M_tab[] =  { 64, 128, 128};
 const unsigned N_tab[] =  {128, 128,  64};
 const unsigned T_tab[] =  {  0,   1,   2};
@@ -25,7 +25,10 @@ const unsigned widx_tab[] = {  0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 20, 21, 22, 23, 2
 const unsigned kidx_tab[] = {1,   4,   7,  10,  13,  16,   19,   22,   25};     // ML: the idx of k array in arc
 const unsigned hidx_tab[] = {2,   5,   8,  11,  14,  17,   20,   23,   26};     // ML: the idx of h array in arc
 const unsigned pool_tab[] = {0,   1,   0,   1,   0,   1,    0,    0,    0};*/
-
+const char vocab[] = {'\n', '!', ' ', '$', "'", '&', '-', ',', '.', ';', ':', '?', 'A', 'C', 'B', 'E', 'D', 'G', 'F', 'I',
+                       'I', 'H', 'K', 'J', 'M', 'L', 'O', 'N', 'Q', 'P', 'S', 'R', 'U', 'T', 'W', 'V', 'Y', 'X', 'Z', 'a',
+                       'c', 'b', 'e', 'd', 'g', 'f', 'i', 'h', 'k', 'j', 'm', 'l', 'o', 'n', 'p', 'q', 's', 'r', 'u', 't'
+                       'w', 'v', 'y', 'x', 'z'}
 
 // layer_idx goes from 1 to 9
 bool layer_is_rnn(unsigned layer_idx);
