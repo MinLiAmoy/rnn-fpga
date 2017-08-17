@@ -25,7 +25,7 @@ DATA tanh(
   const DATA in
   ) {
   DATA out;
-  out = (exp(x) - exp(-x))/(exp(x)+exp(-x));
+  out = (exp(x) - exp(-x)) / (exp(x) + exp(-x));
   return out;
 }
 
@@ -42,7 +42,7 @@ DATA dotproduct_m(
   // Loop across in the inputs in batches of WORD_SIZE
   for (unsigned m = 0; m < M; m+=WORD_SIZE) {
 
-    DATA *in_wrd;
+    DATA in_wrd[WORD_SIZE];
     for (unsigned i = 0; i < WORD_SIZE; ++DATA_PER_WORD) {
       in_wrd[i](15,0)   = in[(m + i)/4](15,0);
       in_wrd[i+1](15,0) = in[(m + i)/4](31,16);
@@ -65,9 +65,9 @@ DATA dotproduct_m(
     sum += WORD_SIZE - (x<<1).to_int();*/
     for (i = 0; i < WORD_SIZE; ++i) {
       if (wt_wrd[i] > 0)
-        sum += DATA[i];
-      else
         sum -= DATA[i];
+      else
+        sum += DATA[i];
     }
   }
   return sum;
@@ -91,36 +91,40 @@ void dense_layer_cpu(
     AccelSchedule& s 
 ) {
   //t_dense.start();
-  static Word dmem[5][HIDDEN_STATE/DATA_PER_WORD] = {0};
+  static Word dmem[5][HID_SIZEZ/DATA_PER_WORD] = {0};
 
   
 
   M = s.n_inputs;
   N = s.n_outputs;
 
-  ap_uint<1> d_i_idx = dmem_mode;
-  ap_uint<1> d_o_idx = ~dmem_mode;
+  //ap_uint<1> d_i_idx = dmem_mode;
+  //ap_uint<1> d_o_idx = ~dmem_mode;
 
   Word in[(M+N)/DATA_PER_WORD];
   DATA gate[4][N];  // ML: input, forget, cell(tanh), output
 
   if (layer_idx < 2) {
-    for (unsigned i = 0; i < N+M; i++) {
-      if ((i < N) & (layer_idx == 0) & (inputs_words != 0) ) {
+    for (unsigned i = 0; i < M+N; i+= DATA_PER_WORD) {
+      if ((i < M) & (layer_idx == 0) & (inputs_words != 0) ) {
         in[i/DATA_PER_WORD] = data_i[i/DATA_PER_WORD];
       }
-      else if ((i<N) & (layer_idx == 0) & (inputs_words == 0)) {
+      else if ((i < M) & (layer_idx == 0) & (inputs_words == 0)) {
         in[i/DATA_PER_WORD] = dmem[0][i/DATA_PER_WORD];
       }
-      else if ((i < N) & (layer_idx == 1)) {
-        in[i/DATA_PER_WORD] = dmem[1][i/DATA_PER_WORD]; // *ML:is d_i_idx?
+      else if ((i < M) & (layer_idx == 1)) {
+        in[i/DATA_PER_WORD] = dmem[1][i/DATA_PER_WORD];
       }
-      else if ((i >= N) & (layer_idx == 0)) {
+      else if ((i >= M) & (layer_idx == 0)) {
         in[i/DATA_PER_WORD] = dmem[1][(i-N)/DATA_PER_WORD];
       }
       else{
         in[i/DATA_PER_WORD] = dmem[3][(i-N)/DATA_PER_WORD];
       }
+    }
+  } else {
+    for (unsigned i = 0; i < M; i+= DATA_PER_WORD) {
+      in[i/DATA_PER_WORD] = dmem[3][i/DATA_PER_WORD];
     }
   }
   
@@ -133,11 +137,8 @@ void dense_layer_cpu(
     for (unsigned n = 0; n < N; n+=WORD_SIZE) {
       Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
-        DATA sum = dotproduct_m(dmem[d_i_idx][3], wt_i, M, n+nb);
-        out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
-        /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
-        if (res < 0)
-          out_wrd[nb] = 1;*/
+        DATA sum = dotproduct_m(in, wt_i, M, n+nb);
+        out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
       }
       data_o[n/DATA_PER_WORD] = out_wrd;
       dmem[0][n/DATA_PER_WORD] = out_wrd; // ML: dont need another data buffer?
@@ -147,26 +148,23 @@ void dense_layer_cpu(
       Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
-        out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
-        /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
-        if (res < 0) 
-          out_wrd[nb] = 1;*/
+        out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
       }
       gate[n](15,0) = out_wrd(15,0);
     }
 
     for (unsigned n = 0; n < 4N; n++) {
       unsigned gate_idx = n / N;
-
+      unsigned gate_off = n % N;
       DATA temp;
 
       if (gate_idx != 2) {
-        temp = sigmoid(gate[gate_idx][n%4]);
-        gate[gate_idx][n%4] = temp;
+        temp = sigmoid(gate[gate_idx][gate_off]);
+        gate[gate_idx][gate_off] = temp;
       }
       else {
-        temp = tanh(gate[gate_idx][n%4]);
-        gate[gate_idx][n%4] = temp;
+        temp = tanh(gate[gate_idx][gate_off]);
+        gate[gate_idx][gate_off] = temp;
       }
     }
 
@@ -176,8 +174,8 @@ void dense_layer_cpu(
       DATA hidden;
       cell_pre(15,0) = dmem[layer_idx*2][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1)
       // ML: new cell state
-      cell = gate[1][n]*cell_pre + gate[0][n]*gate[2][n];
-      hidden = gate[3][n]*tanh(cell);
+      cell = gate[1][n] * cell_pre + gate[0][n]*gate[2][n];
+      hidden = gate[3][n] * tanh(cell);
       dmem[layer_idx*2][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1) = cell(15,0);
       dmem[layer_idx*2 - 1][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1) = hidden(15,0);
     }

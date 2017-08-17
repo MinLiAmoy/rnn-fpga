@@ -62,8 +62,8 @@ void set_weight_array_rnn(Word* w, const float* wts, unsigned layer_idx, unsigne
   const unsigned M = M_tab[layer_idx-1];
   const unsigned N = N_tab[layer_idx-1];
 
-  if ((weight_idx / 2) == 0) {
-    idx = M * N * weight_idx / WORD_SIZE;   // ML: assume N = 128, than it's power of 2
+  if ((weight_idx % 2) == 0) {
+    idx = M * N * weight_idx/ 2 / WORD_SIZE;   // ML: assume N = 128, than it's power of 2
     //off = M*N*weight_idx%WORD_SIZE;
     set_dense_weight_array(w[idx], wts, M, N);
   } else {

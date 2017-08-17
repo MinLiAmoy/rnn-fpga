@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 
   // print some config numbers
   printf ("* WT_WORDS   = %u\n", WT_WORDS); 
-  printf ("* KH_WORDS   = %u\n", KH_WORDS);     // ML: *
+  //printf ("* KH_WORDS   = %u\n", KH_WORDS);     // ML: *
 
   // Load input data
   /*printf ("## Loading input data ##\n");
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------
   // // compute accelerator schedule (divides up weights)
   // ---------------------------------------------------------------------
-  AccelSchedule layer_sched[N_LAYERS];
+  AccelSchedule layer_sched[N_LAYERS];    
   for (unsigned l = 0; l < N_LAYERS; ++l) {
     compute_accel_schedule(
         wt[l], 
@@ -145,22 +145,21 @@ int main(int argc, char** argv) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
 
-    dense_layer_cpu(
-      data_i, data_o,
-      l-1,
-      (n==1) ? (64/DATA_PER_WORD) : 0,    // input_words
-      (l==3) ? (64/DATA_PER_WORD) : 0,
-      //l % 2,
-      layer_sched[l-1]
-    );  
-    
+      dense_layer_cpu(
+        data_i, data_o,
+        l-1,
+        (l==1) ? (64/DATA_PER_WORD) : 0,    // input_words
+        (l==3) ? (64/DATA_PER_WORD) : 0,
+        //l % 2,
+        layer_sched[l-1]
+      );  
     }
 
     //------------------------------------------------------------
     // Execute last layer
     //------------------------------------------------------------
     int prediction = -1;
-    int max = -1024; // ML: may shoulb be less
+    int max = -512; // ML: may shoulb be less
 
     /*if (DENSE_LAYER_CPU || LAST_LAYER_CPU) {
       prediction = last_layer_cpu(
@@ -182,8 +181,8 @@ int main(int argc, char** argv) {
       DATA temp;
       int add = i / DATA_PER_WORD;
       int off = i % DATA_PER_WORD;
-      temp(15,0) = data_o[add]((off+1)*16-1,off*16);
-      if (temp > max) {
+      temp(15,0) = data_o[add]((off+1)*16-1,off*16-1);
+      if (temp.to_int() > max) {
         max = temp;
         prediction = i;
       }

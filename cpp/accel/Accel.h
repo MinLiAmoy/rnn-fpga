@@ -24,7 +24,7 @@
 //-------------------------------------------------------------------
 
 // ML: define
-const unsigned Hid_SIZE = 128;
+const unsigned HID_SIZE = 128;
 //
 
 const unsigned CONVOLVERS = 2;
@@ -36,10 +36,11 @@ const unsigned CONV1_W_PER_WORD = 4;
 const unsigned KH_PER_WORD = 4;   // ML: 4 -k/h per word
 const unsigned BYTE_SIZE = 8;
 const unsigned K = 3;
-const unsigned WT_L         = (128 + 128)*4*128; // parameter to control wt mem size
+const unsigned WT_L         = (128 + 128)* 4 * 128; // parameter to control wt mem size
 const unsigned C_WT_WORDS   = ((WT_L+CONV_W_PER_WORD-1)/CONV_W_PER_WORD + CONVOLVERS-1) / CONVOLVERS;  // wt words per convolver
 //const unsigned WT_WORDS     = C_WT_WORDS*CONVOLVERS;
-const unsigned WT_WORDS = (128 + 128) * 4 * 128/ WORD_SIZE; // ML: beyond the mem on chip?
+
+const unsigned WT_WORDS = WT_L / WORD_SIZE; // ML: beyond the mem on chip?
 
 const unsigned KH_WORDS     = WT_L/128*16 / WORD_SIZE;
 

@@ -7,6 +7,7 @@
 #include <cstdlib>
 
 const unsigned N_LAYERS = 3;
+
 const unsigned N_W_LAYERS = 8;
 /*const unsigned L_CONV = 6;
 const unsigned S_tab[] =  { 32,  32,  16,  16,   8,   8,    4,    1,    1,   1};    // ML: dim of output

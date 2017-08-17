@@ -72,6 +72,7 @@ void compute_accel_schedule(
     //schedule[idx].width_mode = width_mode;
     //schedule[idx].norm_mode = max_pool + 1;
 
+    unsigned o = 0;  // ML: we assume there is no image batch
     // now we divide up the weights
     Word* wt_i = schedule[idx].wt;
     /*if (layer_type == LAYER_CONV1)
@@ -79,7 +80,12 @@ void compute_accel_schedule(
     else if (layer_type == LAYER_CONV)
       load_conv_weights(wt, wt_i, o, n_inputs, imgs_per_batch);
     else*/
-    load_dense_weights(wt, wt_i, o, n_inputs+n_outputs, 4*n_outputs);    // ML: the weights are loaded on the wt_i
+    if (layer_type < 2) {
+      load_dense_weights(wt, wt_i, o, n_inputs+n_outputs, 4*n_outputs);    // ML: the weights are loaded on the wt_i
+    }
+    else {
+      load_kh(wt, wt_i, o, n_inputs, n_outputs);
+    }
     // divide up the kh params
     //Word* kh_i = schedule[idx].kh;
     /*if (layer_type != LAYER_LAST)
