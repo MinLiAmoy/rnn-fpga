@@ -87,7 +87,7 @@ typedef ap_fixed<20,2, AP_RND> C1InputType;  // ML: input pixel are 20-bit fixed
 typedef ap_fixed<24,6, AP_RND> C1ConvType;
 
 // ML:define
-typedef ap_fixed<16,2, AP_RND> DATA;    // ML:maybe should use 3 20bit data per word!
+typedef ap_fixed<16,8> DATA;    // ML: can do the exp operation
 
 //-------------------------------------------------------------------
 // Template functions

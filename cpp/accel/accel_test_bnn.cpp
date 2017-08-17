@@ -160,6 +160,8 @@ int main(int argc, char** argv) {
     // Execute last layer
     //------------------------------------------------------------
     int prediction = -1;
+    int max = -1024; // ML: may shoulb be less
+
     /*if (DENSE_LAYER_CPU || LAST_LAYER_CPU) {
       prediction = last_layer_cpu(
           wt[ldense],
@@ -176,18 +178,24 @@ int main(int argc, char** argv) {
           1,
           layer_sched[ldense]
       );*/
-      ap_int<8> p = 0;
-      p(7,0) = data_o[0](7,0);
-      prediction = p.to_int();
+    for (unsigned i = 0; i < N; i++) {
+      DATA temp;
+      int add = i / DATA_PER_WORD;
+      int off = i % DATA_PER_WORD;
+      temp(15,0) = data_o[add]((off+1)*16-1,off*16);
+      if (temp > max) {
+        max = temp;
+        prediction = i;
+      }
+    }
+      
     
 
     //assert(prediction >= 0 && prediction <= 9);
-    int label = y.data[n];
+    //int label = y.data[n];
 
-    printf ("  Pred/Label:\t%2u/%2d\t[%s]\n", prediction, label,
-        ((prediction==label)?" OK ":"FAIL"));
-
-    n_errors += (prediction!=label);
+    printf (vocab[prediction]);
+    
   }
 
   printf ("\n");

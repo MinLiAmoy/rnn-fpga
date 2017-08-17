@@ -13,7 +13,24 @@ static Timer t_last ("last");
 // -----------------------------------------------------------------------
 // ML: the size of in[] is like 1*M and the size of w is n*M where M%word_size = 0
 // ML: a call of dotproduct_m can compute a dotproduct using index of n
-int dotproduct_m(
+DATA sigmoid(
+  const DATA in
+  ) {
+  DATA out;
+  out = 1/(1+exp(-x));
+  return out;
+}
+
+DATA tanh(
+  const DATA in
+  ) {
+  DATA out;
+  out = (exp(x) - exp(-x))/(exp(x)+exp(-x));
+  return out;
+}
+
+
+DATA dotproduct_m(
     const Word* in,
     const Word* w,
     const unsigned M,
@@ -60,7 +77,7 @@ int dotproduct_m(
 // Internal dense layer
 // -----------------------------------------------------------------------
 // ML: k, h is the coefficient of BNN!
-// ML: the size of in is M*DATA_PER_WORD = 4M words; the size of out is N*DATA_PER_WORD!
+// ML: the size of in is M/DATA_PER_WORD = M/4 words; the size of out is N/DATA_PER_WORD!
 void dense_layer_cpu(
     //const Word*  wt,
     //const float* k_data,
@@ -85,7 +102,7 @@ void dense_layer_cpu(
   ap_uint<1> d_o_idx = ~dmem_mode;
 
   Word in[(M+N)/DATA_PER_WORD];
-  Word gate[4*N/DATA_PER_WORD];
+  DATA gate[4][N];  // ML: input, forget, cell(tanh), output
 
   if (layer_idx < 2) {
     for (unsigned i = 0; i < N+M; i++) {
@@ -123,7 +140,7 @@ void dense_layer_cpu(
           out_wrd[nb] = 1;*/
       }
       data_o[n/DATA_PER_WORD] = out_wrd;
-      dmem[0][n/DATA_PER_WORD] = out_wrd;
+      dmem[0][n/DATA_PER_WORD] = out_wrd; // ML: dont need another data buffer?
     }
   } else {
     for (unsigned n = 0; n < 4*N; n+=WORD_SIZE) {
@@ -132,28 +149,42 @@ void dense_layer_cpu(
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
         out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
         /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
-        if (res < 0)
+        if (res < 0) 
           out_wrd[nb] = 1;*/
       }
-      gate[n]
-
-
+      gate[n](15,0) = out_wrd(15,0);
     }
+
+    for (unsigned n = 0; n < 4N; n++) {
+      unsigned gate_idx = n / N;
+
+      DATA temp;
+
+      if (gate_idx != 2) {
+        temp = sigmoid(gate[gate_idx][n%4]);
+        gate[gate_idx][n%4] = temp;
+      }
+      else {
+        temp = tanh(gate[gate_idx][n%4]);
+        gate[gate_idx][n%4] = temp;
+      }
+    }
+
+    for (unsigned n = 0; n < N; n++) {
+      DATA cell;
+      DATA cell_pre;
+      DATA hidden;
+      cell_pre(15,0) = dmem[layer_idx*2][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1)
+      // ML: new cell state
+      cell = gate[1][n]*cell_pre + gate[0][n]*gate[2][n];
+      hidden = gate[3][n]*tanh(cell);
+      dmem[layer_idx*2][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1) = cell(15,0);
+      dmem[layer_idx*2 - 1][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1) = hidden(15,0);
+    }
+
+
   }
 
-
-
-  for (unsigned n = 0; n < N; n+=WORD_SIZE) {
-    Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
-    for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
-      DATA sum = dotproduct_m(in, wt, M, n+nb);
-      out_wrd[nb/WORD_SIZE]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
-      /*float res = static_cast<float>(sum) * k_data[n+nb] + h_data[n+nb];
-      if (res < 0)
-        out_wrd[nb] = 1;*/
-    }
-    out[n/WORD_SIZE/DATA_PER_WORD] = out_wrd;
-  }
 
   //t_dense.stop();
 }
