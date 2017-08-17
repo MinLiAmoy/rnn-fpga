@@ -1,6 +1,7 @@
 #include "Dense.h"
 #include "Timer.h"
 
+
 const static Word m1("0x5555555555555555", 16);
 const static Word m2("0x3333333333333333", 16);
 const static Word m4("0x0f0f0f0f0f0f0f0f", 16);
@@ -17,7 +18,7 @@ DATA sigmoid(
   const DATA in
   ) {
   DATA out;
-  out = 1/(1+exp(-x));
+  out = 1/(1+exp(-in));
   return out;
 }
 
@@ -25,7 +26,7 @@ DATA tanh(
   const DATA in
   ) {
   DATA out;
-  out = (exp(x) - exp(-x)) / (exp(x) + exp(-x));
+  out = (exp(in) - exp(-in)) / (exp(in) + exp(-in));
   return out;
 }
 
@@ -43,7 +44,7 @@ DATA dotproduct_m(
   for (unsigned m = 0; m < M; m+=WORD_SIZE) {
 
     DATA in_wrd[WORD_SIZE];
-    for (unsigned i = 0; i < WORD_SIZE; ++DATA_PER_WORD) {
+    for (unsigned i = 0; i < WORD_SIZE; i+=DATA_PER_WORD) {
       in_wrd[i](15,0)   = in[(m + i)/4](15,0);
       in_wrd[i+1](15,0) = in[(m + i)/4](31,16);
       in_wrd[i+2](15,0) = in[(m + i)/4](47,32);
@@ -63,11 +64,11 @@ DATA dotproduct_m(
     x = x & 0x7f;
 
     sum += WORD_SIZE - (x<<1).to_int();*/
-    for (i = 0; i < WORD_SIZE; ++i) {
+    for (unsigned i = 0; i < WORD_SIZE; ++i) {
       if (wt_wrd[i] > 0)
-        sum -= DATA[i];
+        sum -= in_wrd[i];
       else
-        sum += DATA[i];
+        sum += in_wrd[i];
     }
   }
   return sum;
@@ -91,12 +92,12 @@ void dense_layer_cpu(
     AccelSchedule& s 
 ) {
   //t_dense.start();
-  static Word dmem[5][HID_SIZEZ/DATA_PER_WORD] = {0};
+  static Word dmem[5][HID_SIZE/DATA_PER_WORD] = {0};
 
   
 
-  M = s.n_inputs;
-  N = s.n_outputs;
+  unsigned M = s[0].n_inputs;
+  unsigned N = s[0].n_outputs;
 
   //ap_uint<1> d_i_idx = dmem_mode;
   //ap_uint<1> d_o_idx = ~dmem_mode;
@@ -128,10 +129,10 @@ void dense_layer_cpu(
     }
   }
   
-  static Word* wt_i = (Words*) MEM_ALLOC( WT_WORDS*sizeof(Word));
+  static Word* wt_i = (Word*) MEM_ALLOC( WT_WORDS*sizeof(Word));
 
   for (unsigned j = 0; j < WT_WORDS; ++j)
-      wt_i[j] = s.wt[j];
+      wt_i[j] = s[0].wt[j];
 
   if (layer_idx == LAYER_LAST){
     for (unsigned n = 0; n < N; n+=WORD_SIZE) {
@@ -145,15 +146,18 @@ void dense_layer_cpu(
     }
   } else {
     for (unsigned n = 0; n < 4*N; n+=WORD_SIZE) {
-      Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+      //Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
-        out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
+        //out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
+        unsigned gate_idx = (n + nb) / N;
+        unsigned gate_off = (n + nb) % N;
+        gate[gate_idx][gate_off](15,0) = sum(15,0);
       }
-      gate[n](15,0) = out_wrd(15,0);
+      
     }
 
-    for (unsigned n = 0; n < 4N; n++) {
+    for (unsigned n = 0; n < 4*N; n++) {
       unsigned gate_idx = n / N;
       unsigned gate_off = n % N;
       DATA temp;
@@ -172,7 +176,7 @@ void dense_layer_cpu(
       DATA cell;
       DATA cell_pre;
       DATA hidden;
-      cell_pre(15,0) = dmem[layer_idx*2][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1)
+      cell_pre(15,0) = dmem[layer_idx*2][n/DATA_PER_WORD]((n%DATA_PER_WORD+1)*16-1, (n%DATA_PER_WORD)*16-1);
       // ML: new cell state
       cell = gate[1][n] * cell_pre + gate[0][n]*gate[2][n];
       hidden = gate[3][n] * tanh(cell);

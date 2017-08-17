@@ -25,6 +25,9 @@
 
 // ML: define
 const unsigned HID_SIZE = 128;
+const unsigned DATA_SIZE = 16;
+const unsigned DATA_PER_WORD = 4;
+const unsigned VOCAB_SIZE = 64;
 //
 
 const unsigned CONVOLVERS = 2;
@@ -63,8 +66,7 @@ const unsigned CONV_ROWS = 3;
 const unsigned CONV_COLS = BANK_WIDTH+2;    // ML: 2->0 padding
 const unsigned CONV_BANKS = WORD_SIZE / BANK_WIDTH;
 
-const unsigned DATA_SIZE = 16;
-const unsigned DATA_PER_WORD = 4;
+
 
 //-------------------------------------------------------------------
 // Typedefs
@@ -119,7 +121,7 @@ void load_kh(T& comp, const Word kh_mem[KH_WORDS], Address idx) {
 #pragma SDS data data_mover(wt_i:AXIDMA_SIMPLE, kh_i:AXIDMA_SIMPLE)
 void top(
     Word wt_i[WT_WORDS],
-    //Word kh_i[KH_WORDS],
+    Word kh_i[KH_WORDS],
     Word dmem_i[DMEM_WORDS],
     Word dmem_o[DMEM_O_WORDS],
     const Address    n_inputs,
@@ -128,8 +130,8 @@ void top(
     const Address    output_words,
     const ap_uint<3> layer_mode,  // [0]='new layer', [2:1]='conv1,conv,dense'
     const ap_uint<1> dmem_mode,   // 0 means dmem[0] is input
-    //const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
-    //const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'
+    const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
+    const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'
 );
 
 #endif

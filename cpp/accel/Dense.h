@@ -1,10 +1,12 @@
 #ifndef ACCEL_DENSE_H
 #define ACCEL_DENSE_H
 
+#include <cstddef>
 #include <hls_math.h>
 #include "Debug.h"
 #include "Typedefs.h"
 #include "Accel.h"
+#include "AccelSchedule.h"
 
 /*void dense_layer_cpu(
     const Word* w,

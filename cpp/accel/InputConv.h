@@ -1,6 +1,7 @@
 #ifndef ACCEL_INPUT_CONV_H
 #define ACCEL_INPUT_CONV_H
 
+#include <cstddef>
 #include "Typedefs.h"
 #include "Accel.h"
 

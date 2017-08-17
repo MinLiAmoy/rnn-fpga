@@ -63,17 +63,17 @@ void set_weight_array_rnn(Word* w, const float* wts, unsigned layer_idx, unsigne
   const unsigned N = N_tab[layer_idx-1];
 
   if ((weight_idx % 2) == 0) {
-    idx = M * N * weight_idx/ 2 / WORD_SIZE;   // ML: assume N = 128, than it's power of 2
+    unsigned idx = M * N * weight_idx/ 2 / WORD_SIZE;   // ML: assume N = 128, than it's power of 2
     //off = M*N*weight_idx%WORD_SIZE;
-    set_dense_weight_array(w[idx], wts, M, N);
+    set_dense_weight_array(&w[idx], wts, M, N);
   } else {
-    idx = M * N * 4 / WORD_SIZE + N * N * weight_idx / 2 / WORD_SIZE;
-    set_dense_weight_array(w[idx], wts, N, N);
+    unsigned idx = M * N * 4 / WORD_SIZE + N * N * weight_idx / 2 / WORD_SIZE;
+    set_dense_weight_array(&w[idx], wts, N, N);
   }
   
 }
 
-void set_conv_weight_array(Word* w, const float* wts, unsigned size) {
+/*void set_conv_weight_array(Word* w, const float* wts, unsigned size) {
   unsigned wrd = 0, off = 0;
   for (unsigned m = 0; m < size; ++m) {
     for (unsigned i = 0; i < WT_SIZE; ++i) {
@@ -84,7 +84,7 @@ void set_conv_weight_array(Word* w, const float* wts, unsigned size) {
       wrd++;
     }
   }
-}
+}*/
 
 void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N) {
   unsigned w_idx = 0;
@@ -100,7 +100,7 @@ void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N) {
   }
 }
 
-//------------------------------------------------------------------------
+/*//------------------------------------------------------------------------
 // Binarize and pack the batch norm parameters
 //------------------------------------------------------------------------
 const int M_INT = 32767;    // ML: ap_int<16> max range = 2^15 -1 = 32767
@@ -346,4 +346,4 @@ void test_dense_layer(
   float err_rate = float(n_err)/N * 100;
   printf ("Error rate: %7.4f%%\n", err_rate);
   assert(err_rate < 1.0);
-}
+}*/

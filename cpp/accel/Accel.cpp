@@ -12,7 +12,7 @@ const static Word h01("0x0101010101010101", 16);
 // -----------------------------------------------------------------------
 // Hardware-specific print helpers
 // -----------------------------------------------------------------------
-template<typename T>
+/*template<typename T>
 void print_ap_bits(const T& in, const unsigned W) {
   printf ("   ");
   for (unsigned i = 0; i < W; ++i)
@@ -283,7 +283,7 @@ void bin_conv(
             wt_word_buffer[m] = wt_mem[m][wt_addr];
           else
             wt_word_buffer[m] = wt_word_buffer[m] >> WT_SIZE;
-          */
+          
           wt_word_buffer[m] = wt_mem[m][wt_addr] >> ap_uint<6>(WT_SIZE*wt_offset);
         }
         if (wt_offset == CONV_W_PER_WORD-1) {
@@ -588,11 +588,9 @@ void fp_conv(
   } // n
 }
 
-
-// ML: rnn modify here! very important
 void bin_dense(
     const Word wt_mem[CONVOLVERS][C_WT_WORDS],
-    //const Word kh_mem[KH_WORDS],
+    const Word kh_mem[KH_WORDS],
     Word dmem[2][CONVOLVERS][C_DMEM_WORDS],
     ap_uint<2> layer_type,
     ap_uint<1> d_i_idx,
@@ -706,89 +704,86 @@ void bin_dense(
 // -----------------------------------------------------------------------
 void top(
     Word wt_i[WT_WORDS],
-    //Word kh_i[KH_WORDS],
+    Word kh_i[KH_WORDS],
     Word dmem_i[DMEM_WORDS],
     Word dmem_o[DMEM_O_WORDS],
     const Address    n_inputs,
     const Address    n_outputs,
-    const Address    input_words,  // ML: 1st rnn:64, else 0
-    const Address    output_words,  // ML: last dense:64, else 0
+    const Address    input_words,
+    const Address    output_words,
     const ap_uint<3> layer_mode,  // [0]='new layer', [2:1]='conv1,conv,dense,last'
     const ap_uint<1> dmem_mode,   // 0 means dmem[0] is input
-    //const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
-    //const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'
+    const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
+    const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'   // *ML: norm_mode cant be zero?
 ) {
   DB_PRINT(2, "==== Entering Accel ====\n");
   const ap_uint<2> layer_type = layer_mode(2,1);
-  //const unsigned width = 8 << width_mode;
+  const unsigned width = 8 << width_mode;
   DB_PRINT(1, "  Inputs  = %d\n", n_inputs.to_int());
   DB_PRINT(1, "  Outputs = %d\n", n_outputs.to_int());
   DB_PRINT(1, "  i_words = %d\n", input_words.to_int());
   DB_PRINT(1, "  o_words = %d\n", output_words.to_int());
-  //DB_PRINT(1, "  Width = %d\n", width);
+  DB_PRINT(1, "  Width = %d\n", width);
   DB_PRINT(1, "  layer_mode = %d %d\n", layer_mode[0]==0 ? 0 : 1, layer_type.to_int());
   DB_PRINT(1, "  dmem_mode = %d\n", dmem_mode.to_int());
 
-  //assert(width <= MAX_WIDTH);
+  assert(width <= MAX_WIDTH);
   assert(n_inputs != 0);
-  /*if (layer_type <= LAYER_CONV) {
+  if (layer_type <= LAYER_CONV) {
     assert(input_words % CONVOLVERS == 0);
     assert(n_inputs*width*width <= DMEM_WORDS*WORD_SIZE);
     assert(n_inputs*WT_SIZE <= WT_WORDS*WORD_SIZE);
-  }*/
+  }
 
-  static Word dmem[2][6][HIDDEN_SIZE/DATA_PER_WORD] = {0}; // ML: input word vector, 1st hidden state, 1st cell state, 2nd hidden state, 2nd cell state, output word vector
-  //static Word kh_mem[KH_WORDS];
-  //static Word wt_mem[CONVOLVERS][C_WT_WORDS];
-  static Word kt_mem[WT_WORDS];
-  //static Address kh_index = 0;
+  static Word dmem[2][CONVOLVERS][C_DMEM_WORDS];
+  static Word kh_mem[KH_WORDS];
+  static Word wt_mem[CONVOLVERS][C_WT_WORDS];
+  static Address kh_index = 0;
   static Address o_index = 0;
 
   if (layer_mode[0]) {
-    //kh_index = 0;
+    kh_index = 0;
     o_index = 0;
-  } //else {
-    //kh_index = kh_index[0];
-  //}
+  } else {
+    kh_index = kh_index[0];
+  }
 
   ap_uint<1> d_i_idx = dmem_mode;
   ap_uint<1> d_o_idx = ~dmem_mode;
 
   // Data input
- // const ap_uint<5> words_per_image = 1 << (2*width_mode);
-  //Address img_idx = 0;  // i / words_per_image;
-  //IdxType img_off = 0;  // i % words_per_image;
-
-
+  const ap_uint<5> words_per_image = 1 << (2*width_mode);
+  Address img_idx = 0;  // i / words_per_image;
+  IdxType img_off = 0;  // i % words_per_image;
   LOOP_DMEM_I: for (Address i = 0; i < input_words; ++i) {
-    /*if (layer_type == LAYER_CONV) {
+    if (layer_type == LAYER_CONV) {
       Address bank_idx = img_idx % CONVOLVERS;
       Address bank_off = img_idx / CONVOLVERS;
       dmem[d_i_idx][bank_idx][(bank_off<<(2*width_mode)) + img_off] = dmem_i[i];
     }
     else if (layer_type == LAYER_CONV1)
       dmem[d_i_idx][i/C_DMEM_WORDS][i%C_DMEM_WORDS] = dmem_i[i];
-    else*/
-      dmem[d_i_idx][0][i] = dmem_i[i];
+    else
+      dmem[d_i_idx][i%CONVOLVERS][i/CONVOLVERS] = dmem_i[i];
 
-    /*if (++img_off == words_per_image) {
+    if (++img_off == words_per_image) {
       img_off = 0;
       ++img_idx;
-    }*/
+    }
   }
 
   // Weight input, we must copy every 64-bit Word from the interface
   // into the accelerator
-  LOOP_WT_I: for (Address i = 0; i < WT_WORDS; ++i) {
-    wt_mem[i] = wt_i[i];
+  LOOP_WT_I: for (Address i = 0; i < C_WT_WORDS*CONVOLVERS; ++i) {
+    wt_mem[i%CONVOLVERS][i/CONVOLVERS] = wt_i[i];
   }
   //printf ("\nAccel Weights:\n");
   //print_params3d(wt_mem[0], 0, n_inputs*n_outputs);
 
-  //LOOP_KH_I: for (ap_uint<16> i = 0; i < KH_WORDS; ++i)
-    //kh_mem[i] = kh_i[i];
+  LOOP_KH_I: for (ap_uint<16> i = 0; i < KH_WORDS; ++i)
+    kh_mem[i] = kh_i[i];
 
-  /*if (layer_type == LAYER_CONV1) {
+  if (layer_type == LAYER_CONV1) {
     assert(n_inputs == 3);
 
     fp_conv(
@@ -831,10 +826,10 @@ void top(
       o_index++;
     }
   }
-  else {*/
+  else {
     bin_dense(
         wt_mem,
-        //kh_mem,
+        kh_mem,
         dmem,
         layer_type,
         d_i_idx, d_o_idx,
@@ -843,27 +838,27 @@ void top(
     );
 
     o_index += n_outputs;
-   // layer_type
+  } // layer_type
 
   // Data output
-  //ap_uint<5> words_per_out = words_per_image / ((norm_mode!=2) ? 1 : 4);
-  //img_idx = 0;
-  //img_off = 0;
+  ap_uint<5> words_per_out = words_per_image / ((norm_mode!=2) ? 1 : 4);
+  img_idx = 0;
+  img_off = 0;
   LOOP_DMEM_O: for (Address i = 0; i < output_words; ++i) {
     // exclude conv6 (width==8, norm_mode==2) here because it writes
     // the output fmaps linearly
-    /*if (layer_type <= LAYER_CONV && !(width_mode == 0 && norm_mode == 2)) {
+    if (layer_type <= LAYER_CONV && !(width_mode == 0 && norm_mode == 2)) {
       Address bank_idx = img_idx % CONVOLVERS;
       Address bank_off = img_idx / CONVOLVERS;
       dmem_o[i] = dmem[d_o_idx][bank_idx][bank_off*words_per_out + img_off];
     }
-    else*/
-      dmem_o[i] = dmem[d_o_idx][5][i];
+    else
+      dmem_o[i] = dmem[d_o_idx][i%CONVOLVERS][i/CONVOLVERS];
 
-    /*if (++img_off == words_per_out) {
+    if (++img_off == words_per_out) {
       img_off = 0;
-      ++img_idx;*/
+      ++img_idx;
     }
-  
+  }
 }
-
+*/

@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <cstddef>
 #include <string>
 #include <cstdlib>
 #include <assert.h>

@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
       wt[l] = new Word[WTS_TO_WORDS(M*N)];    // ML: roughly a word contains 7 binarized 3*3 conv param.
     else*/
     if (layer_is_rnn(l+1))
-      wt[l] = new Word[4N*(M+N)/WORD_SIZE];
+      wt[l] = new Word[4*N*(M+N)/WORD_SIZE];
     else
       wt[l] = new Word[M*N/WORD_SIZE];    // ML: RNN layers
 
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
       DATA start_seed = 1;
       data_i[i](15,0) = start_seed(15,0);
     } else {
-      data[i] = 0;
+      data_i[i] = 0;
     }
   }
 
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------------
     // Execute last layer
     //------------------------------------------------------------
-    int prediction = -1;
+    int prediction = 0;
     int max = -512; // ML: may shoulb be less
 
     /*if (DENSE_LAYER_CPU || LAST_LAYER_CPU) {
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
           1,
           layer_sched[ldense]
       );*/
-    for (unsigned i = 0; i < N; i++) {
+    for (unsigned i = 0; i < VOCAB_SIZE; i++) {
       DATA temp;
       int add = i / DATA_PER_WORD;
       int off = i % DATA_PER_WORD;
@@ -193,21 +193,21 @@ int main(int argc, char** argv) {
     //assert(prediction >= 0 && prediction <= 9);
     //int label = y.data[n];
 
-    printf (vocab[prediction]);
+    std::cout<<vocab[prediction];
     
   }
 
-  printf ("\n");
+  /*printf ("\n");
   printf ("Errors: %u (%4.2f%%)\n", n_errors, float(n_errors)*100/n_imgs);
   printf ("\n");
   printf ("Total accel runtime = %10.4f seconds\n", total_time());
-  printf ("\n");
+  printf ("\n");*/
 
   MEM_FREE( data_o );
   MEM_FREE( data_i );
   for (unsigned n = 0; n < N_LAYERS; ++n) {
     delete[] wt[n];
-    delete[] kh[n];
+    //delete[] kh[n];
   }
   return 0;
 }

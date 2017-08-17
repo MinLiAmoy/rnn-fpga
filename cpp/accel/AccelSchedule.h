@@ -40,7 +40,7 @@ void compute_accel_schedule(
     unsigned layer_idx
 );
 
-void run_accel_schedule(
+/*void run_accel_schedule(
     Word* data_i,
     Word* data_o,
     unsigned layer_idx,
@@ -48,7 +48,7 @@ void run_accel_schedule(
     unsigned output_words,
     ap_uint<1> dmem_mode,
     AccelSchedule& s
-);
+);*/
 
 void load_conv1_weights(Word* wt, Word* wt_o,
                   unsigned o, unsigned n_out);

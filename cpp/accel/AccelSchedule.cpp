@@ -60,7 +60,7 @@ void compute_accel_schedule(
   //schedule.resize(n_batches);   // ML: seems like n_batched same copy, schedule haven't been assigned
 
   // divide up the weights according to the value of imgs_per_batch
-  //unsigned idx = 0;
+  unsigned idx = 0;
   //for (unsigned o = 0; o < n_outputs; o+=imgs_per_batch, idx++) {
     //layer_mode[0] = (o==0) ? 1 : 0;   // ML: layer_mode(1)=1-> new layers
     layer_mode[0] = 1;
@@ -84,7 +84,7 @@ void compute_accel_schedule(
       load_dense_weights(wt, wt_i, o, n_inputs+n_outputs, 4*n_outputs);    // ML: the weights are loaded on the wt_i
     }
     else {
-      load_kh(wt, wt_i, o, n_inputs, n_outputs);
+      load_dense_weights(wt, wt_i, o, n_inputs, n_outputs);
     }
     // divide up the kh params
     //Word* kh_i = schedule[idx].kh;
@@ -99,6 +99,7 @@ void compute_accel_schedule(
 // -----------------------------------------------------------------------
 // Invoke accel multiple times based on an AccelSchedule (vec of AccelInfo)
 // -----------------------------------------------------------------------
+/*
 void run_accel_schedule(
     Word* data_i,
     Word* data_o,
@@ -122,11 +123,11 @@ void run_accel_schedule(
   // Invoke accelerator once for each element in the schedule
   for (unsigned i = 0; i < N; ++i) {
     for (unsigned j = 0; j < WT_WORDS; ++j)
-      wt_i[j] = s[i].wt[j];
+      wt_i[j] = s[i].wt[j];*/
     /*for (unsigned j = 0; j < KH_WORDS; ++j)
       kh_i[j] = s[i].kh[j];*/
 
-    timers[LAYERS-1-layer_idx].start();
+    /*timers[LAYERS-1-layer_idx].start();
 
     top(
         wt_i, data_i, data_o,
@@ -134,7 +135,7 @@ void run_accel_schedule(
         (i==0)   ? input_words : 0,
         (i==N-1) ? output_words : 0,
         s[i].layer_mode,
-        dmem_mode,
+        dmem_mode
         //s[i].width_mode,
         //s[i].norm_mode
     );
@@ -144,7 +145,7 @@ void run_accel_schedule(
 
   //MEM_FREE( wt_i );
   //MEM_FREE( kh_i );
-}
+} */
 
 // -----------------------------------------------------------------------
 // determine the appropriate output batch size which allows the params
