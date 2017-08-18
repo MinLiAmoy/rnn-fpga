@@ -7,26 +7,19 @@
 #include "AccelPrint.h"
 #include <cstdlib>
 
+// ML: num of layer of RNN
 const unsigned N_LAYERS = 3;
+// ML: num of weight arrays of every gate in rnn layer
+const unsigned N_W_LAYERS = 4;
 
-const unsigned N_W_LAYERS = 8;
-/*const unsigned L_CONV = 6;
-const unsigned S_tab[] =  { 32,  32,  16,  16,   8,   8,    4,    1,    1,   1};    // ML: dim of output
-const unsigned M_tab[] =  {  3, 128, 128, 256, 256, 512, 8192, 1024, 1024};
-const unsigned N_tab[] =  {128, 128, 256, 256, 512, 512, 1024, 1024,   10};     // ML: the dim of inputs and outputs
-const unsigned T_tab[] =  {  0,   1,   1,   1,   1,   1,    2,    2,    3};     // ML: the idx of LayerTypeEnum to the sequential layers
-*/
-//const unsigned S_tab[] =  {  1,   1,   1,  1};
-const unsigned M_tab[] =  { 64, 128, 128};
-const unsigned N_tab[] =  {128, 128,  64};
-const unsigned T_tab[] =  {  0,   1,   2};
-const unsigned widx_tab[] = {  0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 20, 21, 22, 23, 24, 25, 36};//ML: need to be modifed. the dim should be N_W_LAYERS*N_LAYERS
 
-// ML: n_file in param arc is 29
-/*const unsigned widx_tab[] = {0,   3,   6,   9,  12,  15,   18,   21,   24};     // ML: the idx of weights array in arc
-const unsigned kidx_tab[] = {1,   4,   7,  10,  13,  16,   19,   22,   25};     // ML: the idx of k array in arc
-const unsigned hidx_tab[] = {2,   5,   8,  11,  14,  17,   20,   23,   26};     // ML: the idx of h array in arc
-const unsigned pool_tab[] = {0,   1,   0,   1,   0,   1,    0,    0,    0};*/
+const unsigned M_tab[] =  { 64, 128, 128};  // input num
+const unsigned N_tab[] =  {128, 128,  64};  // output num 
+const unsigned T_tab[] =  {  0,   1,   2};  // type of 
+const unsigned widx_tab[] = {  0, 1, 3, 4, 6, 7, 9, 10, 14, 15, 17, 18, 20, 21, 23, 24, 28}; // idx of each weight array in zip arc
+const unsigned bidx_tab[] = {  2, 5, 8, 11, 16, 19, 22, 25, 29};    // idx of each bias array in zip arc
+
+// num of elements in vocab
 const char vocab[] = {'\n', '!', ' ', '$', '\'', '&', '-', ',', '.', ';', ':', '?', 'A', 'C', 'B', 'E', 'D', 'G', 'F', 'I',
                    'H', 'K', 'J', 'M', 'L', 'O', 'N', 'Q', 'P', 'S', 'R', 'U', 'T', 'W', 'V', 'Y', 'X', 'Z', 'a',
                    'c', 'b', 'e', 'd', 'g', 'f', 'i', 'h', 'k', 'j', 'm', 'l', 'o', 'n', 'p', 'q', 's', 'r', 'u', 't',
@@ -34,15 +27,8 @@ const char vocab[] = {'\n', '!', ' ', '$', '\'', '&', '-', ',', '.', ';', ':', '
 
 // layer_idx goes from 1 to 9
 bool layer_is_rnn(unsigned layer_idx);
-/*bool layer_is_conv(unsigned layer_idx);
-bool layer_is_binconv(unsigned layer_idx);
-bool layer_is_fpconv(unsigned layer_idx);*/
 bool layer_is_last(unsigned layer_idx);
-/*bool layer_wt_size(unsigned layer_idx);
-bool layer_kh_size(unsigned layer_idx);
 
-// number of Words allocated to store n weights
-unsigned WTS_TO_WORDS(const unsigned n);
 // Simple log function, only works for powers of 2
 unsigned log2(unsigned x);
 
@@ -55,15 +41,18 @@ void set_bit_array(T1 array[], const T2* data, unsigned size) {
   for (unsigned i = 0; i < size; ++i) {
     set_bit(array, i, (data[i]>=0) ? Bit(0) : Bit(-1));
   }
-}*/
+}
 
 //------------------------------------------------------------------------
 // Functions used to preprocess params and inputs
 //------------------------------------------------------------------------
-void set_weight_array(Word* w, const float* wts, unsigned layer_idx);
-void set_weight_array_rnn(Word* w, const float* wts, unsigned layer_idx, unsigned weight_idx);
-/*void set_conv_weight_array(Word* w, const float* wts, unsigned size);*/
-void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N);
+
+void set_rnn_weight_array(Word* w, const float* wts_in, const float* wts_hid, unsigned layer_idx, unsigned weight_idx);
+void set_rnn_bias_array(Word* b, const float* bias, unsigned layer_idx, unsigned weight_idx);
+void set_dense_weight_array(Word* w, const float* wts, unsigned layer_idx);
+void set_dense_bias_array(Word* b, const float* bias, unsigned layer_idx);
+
+
 /*
 void set_bnorm_array(Word* kh, const float* k, const float* h, unsigned layer_idx);
 void set_bnorm_array1(Word* kh, const float* k, const float* h, unsigned layer_idx, unsigned N);

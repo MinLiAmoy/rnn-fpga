@@ -11,24 +11,11 @@ bool layer_is_rnn(unsigned layer_idx) {
   assert(layer_idx != 0 && layer_idx <= N_LAYERS);
   return T_tab[layer_idx-1] == LAYER_RNN1 || T_tab[layer_idx-1] == LAYER_RNN2;
 }
-/*
-bool layer_is_conv(unsigned layer_idx) {
-  return layer_is_binconv(layer_idx) || layer_is_fpconv(layer_idx);
-}
-bool layer_is_binconv(unsigned layer_idx) {
-  assert(layer_idx != 0 && layer_idx <= N_LAYERS);
-  return T_tab[layer_idx-1] == LAYER_CONV;
-}
-bool layer_is_fpconv(unsigned layer_idx) {
-  assert(layer_idx != 0 && layer_idx <= N_LAYERS);
-  return T_tab[layer_idx-1] == LAYER_CONV1;
-}*/
+
 bool layer_is_last(unsigned layer_idx) {
   assert(layer_idx != 0 && layer_idx <= N_LAYERS);
   return T_tab[layer_idx-1] == LAYER_LAST;
 }
-bool layer_wt_size(unsigned layer_idx);
-bool layer_kh_size(unsigned layer_idx);
 
 // Simple log function, only works for powers of 2
 unsigned log2(unsigned x) {
@@ -40,59 +27,56 @@ unsigned log2(unsigned x) {
   return res;
 }
 
-// number of Words allocated to store n conv weights
-unsigned WTS_TO_WORDS(const unsigned n) {
-  // divide n weights by W_PER_WORD
-  const unsigned words = (n + CONV_W_PER_WORD-1) / CONV_W_PER_WORD;   // ML: divide by CONV_W_PER_WORD and rounding to upper bound
-  // round up to nearest convolvers
-  return ((words+CONVOLVERS-1) / CONVOLVERS) * CONVOLVERS;    // ML: make the num to be the mutiple of CONVOLVERS
-}
-
 //------------------------------------------------------------------------
 // Binarize weights and pack them into Words
 //------------------------------------------------------------------------
-void set_weight_array(Word* w, const float* wts, unsigned layer_idx) {
+
+void set_rnn_weight_array(Word* w, const float* wts_in, const float* wts_hid, unsigned layer_idx, unsigned weight_idx) {
   const unsigned M = M_tab[layer_idx-1];
   const unsigned N = N_tab[layer_idx-1];
-
-  set_dense_weight_array(w, wts, M, N);
+  unsigned w_idx = 0;
+  for (unsigned n = 0; n < N; ++n) {
+    for (unsigned m = 0; m < M + N; m+=WORD_SIZE) {
+      Word wrd = 0;
+      if (m < M) {
+        for (unsigned b = 0; b < WORD_SIZE; ++b) {
+          wrd[b] = ((wts_in[(m+b)*N+n] < 0) ? 0 : 1);
+        }
+      } else {
+        for (unsigned b = 0; b < WORD_SIZE; ++b) {
+          wrd[b] = ((wts_hid[(m-M+b)*N+n] < 0) ? 0 : 1);
+        }
+      }
+      w[weight_idx*(M+N)*N/WORD_SIZE + w_idx] = wrd;
+      ++w_idx;
+    }
+  }
 }
 
-void set_weight_array_rnn(Word* w, const float* wts, unsigned layer_idx, unsigned weight_idx) {
+void set_rnn_bias_array(Word* b, const float* bias, unsigned layer_idx, unsigned weight_idx) {
+  const unsigned N =N_tab[layer_idx-1];
+  unsigned b_idx = 0;
+  Word wrd = 0
+  for (unsigned n = 0; n < N; n+=WORD_SIZE) {
+    for (unsigned b = 0; b < WORD_SIZE; ++b) {
+      wrd[b] = ((bias[n + b] < 0) ? 0 : 1);
+    }
+    b[weight_idx*N/WORD_SIZE + b_idx] = wrd;
+    ++b_idx;
+  }
+}
+
+
+
+void set_dense_weight_array(Word* w, const float* wts, unsigned layer_idx) {
   const unsigned M = M_tab[layer_idx-1];
   const unsigned N = N_tab[layer_idx-1];
-
-  if ((weight_idx % 2) == 0) {
-    unsigned idx = M * N * weight_idx/ 2 / WORD_SIZE;   // ML: assume N = 128, than it's power of 2
-    //off = M*N*weight_idx%WORD_SIZE;
-    set_dense_weight_array(&w[idx], wts, M, N);
-  } else {
-    unsigned idx = M * N * 4 / WORD_SIZE + N * N * weight_idx / 2 / WORD_SIZE;
-    set_dense_weight_array(&w[idx], wts, N, N);
-  }
-  
-}
-
-/*void set_conv_weight_array(Word* w, const float* wts, unsigned size) {
-  unsigned wrd = 0, off = 0;
-  for (unsigned m = 0; m < size; ++m) {
-    for (unsigned i = 0; i < WT_SIZE; ++i) {
-      set_bit(w, wrd*WORD_SIZE+off*WT_SIZE+i, wts[m*WT_SIZE+i]>=0 ? Bit(0) : Bit(-1));
-    }
-    if (++off == CONV_W_PER_WORD) {
-      off = 0;
-      wrd++;
-    }
-  }
-}*/
-
-void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N) {
   unsigned w_idx = 0;
   for (unsigned n = 0; n < N; ++n) {
     for (unsigned m = 0; m < M; m+=WORD_SIZE) {
       Word wrd = 0;
       for (unsigned b = 0; b < WORD_SIZE; ++b) {
-        wrd[b] = ((wts[(m+b)*N+n] < 0) ? 1 : 0);
+        wrd[b] = ((wts[(m+b)*N+n] < 0) ? 0 : 1);
       }   
       w[w_idx] = wrd;
       ++w_idx;
@@ -100,123 +84,21 @@ void set_dense_weight_array(Word* w, const float* wts, unsigned M, unsigned N) {
   }
 }
 
-/*//------------------------------------------------------------------------
-// Binarize and pack the batch norm parameters
-//------------------------------------------------------------------------
-const int M_INT = 32767;    // ML: ap_int<16> max range = 2^15 -1 = 32767
-
-int round_away_from_zero(float f) {
-  return f < 0 ? floor(f) : ceil(f);
-}
-
-// compute -(h/k) without floating-point exception
-float compute_thresh(const float k, const float h) {
-  if (k == 0)
-    return (h >= 0) ? -M_INT : M_INT;
-  else
-    return -(h/k);
-}
-
-void set_bnorm_array(Word* kh, const float* k, const float* h, unsigned layer_idx) {
+void set_dense_bias_array(Word* b, const float* bias, unsigned layer_idx) {
   const unsigned N = N_tab[layer_idx-1];
-  if (!layer_is_last(layer_idx)) {
-    set_bnorm_array1(kh, k, h, layer_idx, N);
-  } else {
-    set_bnorm_array2(kh, k, h, N);
-  }
-}
-
-void set_bnorm_array1(Word* kh, const float* k, const float* h, unsigned layer_idx, unsigned N) {
-  for (unsigned n = 0; n < N; ++n) {
-    NormComp comp;
-    if (layer_is_fpconv(layer_idx)) {
-      // fixed point number for first conv layer
-      C1Comp fi = compute_thresh(k[n], h[n]);
-      comp(15,0) = fi(15,0);    // ML: fixed point number of first conv layer, but NormComp is int16, so when use it, should conver it to fixed-point format
-    } else {
-      // integer number for all other layer, round away from 0
-      comp = round_away_from_zero( compute_thresh(k[n], h[n]) );
+  unsigned b_idx = 0;
+  Word wrd = 0;
+  for (unsigned n = 0; n < N; n+= WORD_SIZE) {
+    for (unsigned b = 0; b < WORD_SIZE; ++b) {
+      wrd[b] = ((bias[n + b] < 0) ? 0 : 1);
     }
-
-    int off = n % KH_PER_WORD;
-    Word w = kh[n/KH_PER_WORD];
-    w((off+1)*16-1, off*16) = comp(15,0);
-    kh[n/KH_PER_WORD] = w;
+    b[b_idx] = wrd;
+    ++b_idx;
   }
 }
 
-void set_bnorm_array2(Word* kh, const float* k, const float* h, unsigned N) {
-  for (unsigned n = 0; n < N; ++n) {
-    KType ki = k[n];
-    HType hi = h[n];
-    //printf ("** ki=%f, hi=%f\n", ki.to_float(), hi.to_float());
-    Word w = kh[n/2];
-    if (n % 2 == 0) {
-      w(15, 0) = ki(15,0);    
-      w(31,16) = hi(15,0);
-    } else {
-      w(47,32) = ki(15,0);
-      w(63,48) = hi(15,0);
-    }
-    kh[n/2] = w; 
-  }
-}   // ML: kh here have N/2 dim actually. 
 
-//------------------------------------------------------------------------
-// Binarize the input image
-//------------------------------------------------------------------------
-void binarize_input_images(Word* dmem_i, const float* inputs, unsigned S) {
-  // N is the number of images, S is the image width in pixels
-  // Assume [in[ut] is a 3 channel non-interleaved image
-  // We pack 3 interleaved pixels into each word
-  const unsigned C = 3;
-  const unsigned W = C1InputType(0).length();
-  assert(W <= WORD_SIZE/C);
-  for (unsigned s = 0; s < S*S; ++s) {
-    Word wrd = 0;
-    for (unsigned c = 0; c < C; ++c) {
-      C1InputType t1 = inputs[c*S*S+s];
-      unsigned offset = W*c;
-      wrd(W-1+offset, offset) = t1(W-1, 0);
-    }
-    dmem_i[s] = wrd;
-  }
-}
-
-//------------------------------------------------------------------------
-// Padded convolution
-//------------------------------------------------------------------------
-void padded_conv(Word in[], Word w[], Word out[],
-                 unsigned M, unsigned S)
-{
-  for (int r = 0; r < S; ++r) {
-  for (int c = 0; c < S; ++c) {
-    out[r*S + c] = 0;
-  }}
-
-  for (int m = 0; m < M; ++m) {
-    for (int r = 0; r < S; ++r) {
-    for (int c = 0; c < S; ++c) {
-      Word res = 0;
-      for (int kr = 0; kr < K; ++kr) {
-      for (int kc = 0; kc < K; ++kc) {
-        TwoBit pix = 0;
-        int _r = r+kr-K/2;
-        int _c = c+kc-K/2;
-        if (_r >= 0 && _c >= 0 && _r < S && _c < S)
-          pix = get_bit(in, m*S*S+_r*S+_c) == 0 ? 1 : -1;
-
-        Address kaddr = m/CONV_W_PER_WORD;
-        IdxType koff = m%CONV_W_PER_WORD;
-        Bit k = w[kaddr][koff*K*K + (2-kr)*K + (2-kc)];
-
-        res += (k!=0) ? (TwoBit)(-pix) : pix;
-      } }
-      out[r*S + c] += res;
-    } }
-  }
-}
-
+/*
 //------------------------------------------------------------------------
 // Helper test function for the accelerator conv layers
 //------------------------------------------------------------------------
