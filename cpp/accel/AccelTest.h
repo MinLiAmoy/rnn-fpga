@@ -4,7 +4,7 @@
 #include <cstddef>
 #include "Typedefs.h"
 #include "Accel.h"
-#include "AccelPrint.h"
+//#include "AccelPrint.h"
 #include <cstdlib>
 
 // ML: num of layer of RNN

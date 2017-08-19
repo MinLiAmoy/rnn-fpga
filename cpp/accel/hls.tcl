@@ -15,8 +15,8 @@ add_files Accel.cpp -cflags $cflags
 add_files -tb accel_test_random.cpp -cflags $tbflags
 add_files -tb AccelSchedule.cpp -cflags $cflags
 add_files -tb AccelTest.cpp -cflags $cflags
-add_files -tb AccelPrint.cpp -cflags $cflags
-add_files -tb InputConv.cpp -cflags $tbflags
+#add_files -tb AccelPrint.cpp -cflags $cflags
+#add_files -tb InputConv.cpp -cflags $tbflags
 add_files -tb Dense.cpp -cflags $tbflags
 add_files -tb $utils -cflags $tbflags
 

@@ -6,7 +6,7 @@ LDFLAGS:=-L../utils -L../minizip -lCraftUtils $(LDFLAGS)
 # HDR are pure headers
 HDR=
 # OBJ must include a .cpp and .h with same name
-OBJ=Accel.o AccelSchedule.o AccelTest.o AccelPrint.o Dense.o InputConv.o
+OBJ=Accel.o AccelSchedule.o AccelTest.o Dense.o
 EXE=accel_test_bnn.exe
 #accel_test_layer.exe accel_test_random.exe
 

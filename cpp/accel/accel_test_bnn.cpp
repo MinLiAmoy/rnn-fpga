@@ -40,12 +40,14 @@ int main(int argc, char** argv) {
     const unsigned M = M_tab[l];
     const unsigned N = N_tab[l];
  
-    if (layer_is_rnn(l+1))
+    if (layer_is_rnn(l+1)) {
       wt[l] = new Word[(M+N)*4*N / WORD_SIZE];
       b[l] = new Word[4*N / WORD_SIZE];
-    else
+    }
+    else {
       wt[l] = new Word[M*N / WORD_SIZE];    // ML: RNN layers
       b[l] = new Word[N / WORD_SIZE];
+    }
     if (layer_is_rnn(l+1)) {
       for (unsigned w_l = 0; w_l < N_W_LAYERS; ++w_l) {
         // ML: set in_to weight and hid_to weight

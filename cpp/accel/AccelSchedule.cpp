@@ -23,7 +23,7 @@ void compute_accel_schedule(
     Word* wt,
     Word* b,   
     unsigned n_inputs,
-    unsigned n_outputs,,
+    unsigned n_outputs,
     const ap_uint<2> layer_type,  // 0=rnn1, 1=rnn2, 2=dense
     AccelSchedule &schedule,
     unsigned layer_idx

@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <hls_stream.h>
 #include "Accel.h"
-#include "AccelPrint.h"
+//#include "AccelPrint.h"
 
 const static Word m1("0x5555555555555555", 16);
 const static Word m2("0x3333333333333333", 16);

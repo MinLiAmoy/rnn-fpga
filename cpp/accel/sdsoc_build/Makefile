@@ -11,7 +11,7 @@ HDR=
 # OBJ must include a .cpp and .h with same name
 UTILS=Common.o Timer.o DataIO.o ParamIO.o ZipIO.o
 LIBUTILS=libSdsCraftUtils.a
-OBJ=Accel.o AccelSchedule.o AccelTest.o AccelPrint.o Dense.o InputConv.o
+OBJ=Accel.o AccelSchedule.o AccelTest.o Dense.o
 EXE=accel_test_bnn.exe
 
 all: $(EXE)

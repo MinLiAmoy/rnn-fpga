@@ -54,9 +54,9 @@ void set_rnn_weight_array(Word* w, const float* wts_in, const float* wts_hid, un
 }
 
 void set_rnn_bias_array(Word* b, const float* bias, unsigned layer_idx, unsigned weight_idx) {
-  const unsigned N =N_tab[layer_idx-1];
+  const unsigned N = N_tab[layer_idx-1];
   unsigned b_idx = 0;
-  Word wrd = 0
+  Word wrd = 0;
   for (unsigned n = 0; n < N; n+=WORD_SIZE) {
     for (unsigned b = 0; b < WORD_SIZE; ++b) {
       wrd[b] = ((bias[n + b] < 0) ? 0 : 1);

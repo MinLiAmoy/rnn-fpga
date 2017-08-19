@@ -71,7 +71,7 @@ typedef ap_fixed<16,8> DATA;    // ML: can do the exp operation
 //-------------------------------------------------------------------
 // Accelerator synthesizable top-level function
 //-------------------------------------------------------------------
-#pragma SDS data copy(dmem_i[0:input_words], dmem_o[0:output_words])
+/*#pragma SDS data copy(dmem_i[0:input_words], dmem_o[0:output_words])
 #pragma SDS data access_pattern(dmem_i:SEQUENTIAL, dmem_o:SEQUENTIAL)
 #pragma SDS data access_pattern(wt_i:SEQUENTIAL, kh_i:SEQUENTIAL)
 #pragma SDS data mem_attribute(dmem_i:PHYSICAL_CONTIGUOUS, dmem_o:PHYSICAL_CONTIGUOUS)
@@ -91,6 +91,6 @@ void top(
     const ap_uint<1> dmem_mode,   // 0 means dmem[0] is input
     const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
     const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'
-);
+);*/
 
 #endif
