@@ -4,12 +4,9 @@
 #include <cstddef>
 #include <hls_video.h>
 #include <hls_stream.h>
-#include <hls_math.h>
-
 #include <stdlib.h>   // include this before sds_lib.h for size_t
 
 #include "Typedefs.h"
-#include "AccelSchedule.h"
 #include "Debug.h"
 #include "Common.h"
 
@@ -30,7 +27,7 @@
 const unsigned HID_SIZE = 128;
 const unsigned DATA_SIZE = 16;
 const unsigned DATA_PER_WORD = 4;
-const unsigned VOCAB_SIZE = 64;   // ML: from TinyShakespeare dataset, which contains 65 characters, we delete '3'.
+const unsigned VOCAB_SIZE = 64;
 //
 
 const unsigned WORD_SIZE = 64;
@@ -95,15 +92,5 @@ void top(
     const ap_uint<2> width_mode,  // 0=8'b, 1=16'b, 2=32'b
     const ap_uint<2> norm_mode    // 0='do nothing', 1='do norm', 2='do pool'
 );*/
-
-
-void dense_layer(
-    Word* data_i,
-    Word* data_o,
-    unsigned layer_idx,
-    const Address inputs_words,
-    const Address outputs_words,
-    AccelSchedule& s 
-);
 
 #endif

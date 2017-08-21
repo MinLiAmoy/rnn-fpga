@@ -3,9 +3,9 @@
 #include <hls_video.h>
 
 #include "Accel.h"
+#include "Dense.h"
 #include "AccelSchedule.h"
 #include "AccelTest.h"
-#include "Dense.h"
 #include "ZipIO.h"
 #include "ParamIO.h"
 #include "DataIO.h"
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
   //--------------------------------------------------------------
   // Run RNN
   //--------------------------------------------------------------
-
+  printf ("debug");
   // ML: load an arbitrary input character [1, 0. 0, ..., 0]
   for (unsigned i = 0; i < VOCAB_SIZE/DATA_PER_WORD; ++i) {
     if (i == 0) {
@@ -119,6 +119,7 @@ int main(int argc, char** argv) {
     }
   }
 
+  printf ("debug");
   for (unsigned n = 0; n < n_char; ++n) {
    
     //------------------------------------------------------------
@@ -127,7 +128,7 @@ int main(int argc, char** argv) {
     for (unsigned l = 1; l <= 3; ++l) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
-
+      printf ("debug");
       dense_layer(
         data_i, data_o,
         l-1,
