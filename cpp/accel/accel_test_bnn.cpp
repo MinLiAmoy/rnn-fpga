@@ -11,12 +11,18 @@
 #include "DataIO.h"
 #include "Timer.h"
 
+//-----------------------------------------------------------------------
+// ML: branch: GRU
+//-----------------------------------------------------------------------
+
 int main(int argc, char** argv) {
   if (argc < 2) {
     printf ("Give number of character to produce as 1st arg\n");
     return 0;
   }
   const unsigned n_char = std::stoi(argv[1]);
+
+  printf ("*RNNs type: GRU");
 
   // print some config numbers
   printf ("* WT_WORDS   = %u\n", WT_WORDS); 
@@ -41,8 +47,8 @@ int main(int argc, char** argv) {
     const unsigned N = N_tab[l];
  
     if (layer_is_rnn(l+1)) {
-      wt[l] = new Word[(M+N)*4*N / WORD_SIZE];  // ML: RNN layers
-      b[l] = new Word[4*N / WORD_SIZE];
+      wt[l] = new Word[(M+N)*3*N / WORD_SIZE];  // ML: RNN layers
+      b[l] = new Word[3*N / WORD_SIZE];
     }
     else {
       wt[l] = new Word[M*N / WORD_SIZE];    // ML: dense(output) layers
@@ -62,10 +68,10 @@ int main(int argc, char** argv) {
       }
     } else {
 
-      const float* weights = params.float_data(widx_tab[16]);
+      const float* weights = params.float_data(widx_tab[12]);
       set_dense_weight_array(wt[l], weights, l+1);
 
-      const float* bias = params.float_data(bidx_tab[8]);
+      const float* bias = params.float_data(bidx_tab[6]);
       set_dense_bias_array(b[l], bias, l+1);
     }
 
@@ -96,7 +102,7 @@ int main(int argc, char** argv) {
 
   unsigned n_errors = 0;
 
-  printf ("## Running RNN for %d characters\n", n_char);
+  printf ("## Running GRU for %d characters\n", n_char);
 
   //--------------------------------------------------------------
   // Run RNN
@@ -116,7 +122,7 @@ int main(int argc, char** argv) {
   for (unsigned n = 0; n < n_char; ++n) {
    
     //------------------------------------------------------------
-    // Execute RNN layers
+    // Execute RNN (GRU) layers
     //------------------------------------------------------------
     for (unsigned l = 1; l <= 3; ++l) {
       const unsigned M = M_tab[l-1];

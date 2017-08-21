@@ -35,8 +35,8 @@ const unsigned VOCAB_SIZE = 64;   // ML: from TinyShakespeare dataset, which con
 
 const unsigned WORD_SIZE = 64;
 
-const unsigned WT_L = (128 + 128)* 4 * 128; // parameter to control wt mem size
-const unsigned BIAS_L = 128 * 4; // ML: parameter to control bias memsize
+const unsigned WT_L = (128 + 128)* 3 * 128; // parameter to control wt mem size
+const unsigned BIAS_L = 128 * 3; // ML: parameter to control bias memsize
 
 
 const unsigned WT_WORDS = WT_L / WORD_SIZE; // ML: beyond the mem on chip?
@@ -51,7 +51,7 @@ const unsigned DMEM_O_WORDS = 64/DATA_PER_WORD;
 //-------------------------------------------------------------------
 // Typedefs
 //-------------------------------------------------------------------
-enum RLayerTyprEnum {LAYER_RNN1, LAYER_RNN2, LAYER_LAST};
+enum RLayerTyprEnum {LAYER_GRU1, LAYER_GRU2, LAYER_DENSE};
 //
 typedef ap_int<WORD_SIZE> Word;
 

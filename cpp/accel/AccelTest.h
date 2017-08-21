@@ -10,14 +10,14 @@
 // ML: num of layer of RNN
 const unsigned N_LAYERS = 3;
 // ML: num of weight arrays of every gate in rnn layer, which include ingate, forgetgate, cellgate, outgate
-const unsigned N_W_LAYERS = 4;
+const unsigned N_W_LAYERS = 3;
 
 
 const unsigned M_tab[] =  { 64, 128, 128};  // input num
 const unsigned N_tab[] =  {128, 128,  64};  // output num 
 const unsigned T_tab[] =  {  0,   1,   2};  // type of 
-const unsigned widx_tab[] = {  0, 1, 3, 4, 6, 7, 9, 10, 14, 15, 17, 18, 20, 21, 23, 24, 28}; // idx of each weight array in zip arc
-const unsigned bidx_tab[] = {  2, 5, 8, 11, 16, 19, 22, 25, 29};    // idx of each bias array in zip arc
+const unsigned widx_tab[] = {  0, 1, 3, 4, 6, 7, 10, 11, 13, 14, 16, 17, 20}; // idx of each weight array in zip arc
+const unsigned bidx_tab[] = {  2, 5, 8, 12, 15, 18, 21};    // idx of each bias array in zip arc
 
 // num of elements in vocab
 const char vocab[] = {'\n', '!', ' ', '$', '\'', '&', '-', ',', '.', ';', ':', '?', 'A', 'C', 'B', 'E', 'D', 'G', 'F', 'I',

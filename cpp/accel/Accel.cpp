@@ -76,7 +76,7 @@ void dense_layer(
     AccelSchedule& s 
 ) {
   //t_dense.start();
-  static Word dmem[5][HID_SIZE/DATA_PER_WORD] = {0}; // ML: sequence: input/output, hid1, cell1, hid2, cell2
+  static Word dmem[3][HID_SIZE/DATA_PER_WORD] = {0}; // ML: sequence: input/output, hid1, hid2
 
   
 
@@ -87,7 +87,7 @@ void dense_layer(
   //ap_uint<1> d_o_idx = ~dmem_mode;
 
   Word in[(M+N)/DATA_PER_WORD];
-  DATA gate[4][N];  // ML: input, forget, cell(tanh), output
+  DATA gate[3][N];  // ML: update gate, reset gate, hidden update gate
 
   if (layer_idx < 2) {
     for (unsigned i = 0; i < M+N; i+= DATA_PER_WORD) {
@@ -104,12 +104,12 @@ void dense_layer(
         in[i/DATA_PER_WORD] = dmem[1][(i-M)/DATA_PER_WORD];
       }
       else{
-        in[i/DATA_PER_WORD] = dmem[3][(i-M)/DATA_PER_WORD];
+        in[i/DATA_PER_WORD] = dmem[2][(i-M)/DATA_PER_WORD];
       }
     }
   } else {
     for (unsigned i = 0; i < M; i+= DATA_PER_WORD) {
-      in[i/DATA_PER_WORD] = dmem[3][i/DATA_PER_WORD];
+      in[i/DATA_PER_WORD] = dmem[2][i/DATA_PER_WORD];
     }
   }
   
@@ -136,49 +136,59 @@ void dense_layer(
       
     }
   } else {
-    for (unsigned n = 0; n < 4*N; n+=WORD_SIZE) {
-      //Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+    for (unsigned n = 0; n < 2*N; n+=WORD_SIZE) {   // ML: compute reset gate and update gate
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
-        //out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
         unsigned gate_idx = (n + nb) / N;
         unsigned gate_off = (n + nb) % N;
         unsigned idx = (n+nb)/DATA_PER_WORD;
         unsigned off = (n+nb)%DATA_PER_WORD;
+        DATA temp;
         DATA bias;
         bias(15,0) = b_i[idx]((off+1)*16-1, (off*16));
         gate[gate_idx][gate_off](15,0) = sum(15,0) + bias;
+        temp = sigmoid(gate[gate_idx][gate_off]);
+        gate[gate_idx][gate_off] = temp;
       }
       
     }
 
-    for (unsigned n = 0; n < 4*N; n++) {
-      unsigned gate_idx = n / N;
-      unsigned gate_off = n % N;
-      DATA temp;
-
-      if (gate_idx != 2) {
+    for (unsigned n = 2*N; n < 3*N; n+=WORD_SIZE) {
+      for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
+        for (unsigned i = M; i < M+N; i++) {
+          in[i] = in[i] * gate[0][n + nb];
+        }
+        DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
+        unsigned gate_idx = (n + nb) / N;
+        unsigned gate_off = (n + nb) % N;
+        unsigned idx = (n+nb)/DATA_PER_WORD;
+        unsigned off = (n+nb)%DATA_PER_WORD;
+        DATA temp;
+        DATA bias;
+        bias(15,0) = b_i[idx]((off+1)*16-1, (off*16));
+        gate[gate_idx][gate_off](15,0) = sum(15,0) + bias;
         temp = sigmoid(gate[gate_idx][gate_off]);
         gate[gate_idx][gate_off] = temp;
       }
-      else {
-        temp = tanh(gate[gate_idx][gate_off]);
-        gate[gate_idx][gate_off] = temp;
-      }
     }
+    /*for (unsigned n = 0; n < 2*N; n++) {
+      unsigned gate_idx = n / N;
+      unsigned gate_off = n % N;
+      DATA temp;
+      temp = sigmoid(gate[gate_idx][gate_off]);
+      gate[gate_idx][gate_off] = temp;
+    }*/
 
     for (unsigned n = 0; n < N; n++) {
-      DATA cell;
-      DATA cell_pre;
       DATA hidden;
+      DATA hidden_pre;
+
       unsigned idx = n / DATA_PER_WORD;
       unsigned offset = n % DATA_PER_WORD;
-      cell_pre(15,0) = dmem[(layer_idx+1)*2][idx]((offset+1)*16-1, (offset)*16);
+      hid_pre(15,0) = dmem[layer_idx+1][idx]((offset+1)*16-1, (offset)*16);
       // ML: new cell state
-      cell = gate[1][n] * cell_pre + gate[0][n]*gate[2][n];
-      hidden = gate[3][n] * tanh(cell);
-      dmem[(layer_idx+1)*2][idx]((offset+1)*16-1, offset*16) = cell(15,0);
-      dmem[(layer_idx+1)*2 - 1][idx]((offset+1)*16-1, offset*16) = hidden(15,0);
+      hidden = (1-gate[1][n]) * hid_pre + gate[1][n]*gate[2][n];
+      dmem[layer_idx+1][idx]((offset+1)*16-1, offset*16) = hidden(15,0);
     }
 
 

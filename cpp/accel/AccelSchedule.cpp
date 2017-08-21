@@ -50,7 +50,7 @@ void compute_accel_schedule(
 
   Word* wt_i = schedule[idx].wt;
   if (layer_type < 2) {
-   load_weights(wt, wt_i, o, n_inputs+n_outputs, 4*n_outputs);    // ML: the weights are loaded on the wt_i
+   load_weights(wt, wt_i, o, n_inputs+n_outputs, 3*n_outputs);    // ML: the weights are loaded on the wt_i
   }
   else {
    load_weights(wt, wt_i, o, n_inputs, n_outputs);
@@ -58,7 +58,7 @@ void compute_accel_schedule(
 
   Word* b_i = schedule[idx].b;
   if (layer_type < 2) {
-    load_bias(b, b_i, o, 4*n_outputs);
+    load_bias(b, b_i, o, 3*n_outputs);
   } else {
     load_bias(b, b_i, o, n_outputs);
   }
