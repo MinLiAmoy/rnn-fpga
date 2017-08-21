@@ -30,7 +30,7 @@
 const unsigned HID_SIZE = 128;
 const unsigned DATA_SIZE = 16;
 const unsigned DATA_PER_WORD = 4;
-const unsigned VOCAB_SIZE = 64;
+const unsigned VOCAB_SIZE = 64;   // ML: from TinyShakespeare dataset, which contains 65 characters, we delete '3'.
 //
 
 const unsigned WORD_SIZE = 64;
@@ -98,7 +98,7 @@ void top(
 
 
 void dense_layer(
-    const Word* data_i,
+    Word* data_i,
     Word* data_o,
     unsigned layer_idx,
     const Address inputs_words,
