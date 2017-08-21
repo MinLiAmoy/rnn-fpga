@@ -20,10 +20,10 @@ const unsigned widx_tab[] = {  0, 1, 3, 4, 6, 7, 9, 10, 14, 15, 17, 18, 20, 21, 
 const unsigned bidx_tab[] = {  2, 5, 8, 11, 16, 19, 22, 25, 29};    // idx of each bias array in zip arc
 
 // num of elements in vocab
-const char vocab[] = {'\n', '!', ' ', '$', '\'', '&', '-', ',', '.', ';', ':', '?', 'A', 'C', 'B', 'E', 'D', 'G', 'F', 'I',
-                   'H', 'K', 'J', 'M', 'L', 'O', 'N', 'Q', 'P', 'S', 'R', 'U', 'T', 'W', 'V', 'Y', 'X', 'Z', 'a',
-                   'c', 'b', 'e', 'd', 'g', 'f', 'i', 'h', 'k', 'j', 'm', 'l', 'o', 'n', 'p', 'q', 's', 'r', 'u', 't',
-                   'w', 'v', 'y', 'x', 'z'};
+const char vocab[] = {'\n', ' ', '!', '$', '&', '\'', ',', '-', '.', ':', ';', '?', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+                   'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a',
+                   'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
+                   'v', 'w', 'x', 'y', 'z'};
 
 // layer_idx goes from 1 to 9
 bool layer_is_rnn(unsigned layer_idx);
