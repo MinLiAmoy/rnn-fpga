@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
     std::cout<<vocab[prediction];
     
   }
-
+  printf("\n");
   /*printf ("\n");
   printf ("Errors: %u (%4.2f%%)\n", n_errors, float(n_errors)*100/n_imgs);
   printf ("\n");
