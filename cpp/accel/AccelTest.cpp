@@ -9,12 +9,12 @@
 
 bool layer_is_rnn(unsigned layer_idx) {
   assert(layer_idx != 0 && layer_idx <= N_LAYERS);
-  return T_tab[layer_idx-1] == LAYER_RNN1 || T_tab[layer_idx-1] == LAYER_RNN2;
+  return T_tab[layer_idx-1] == LAYER_GRU1 || T_tab[layer_idx-1] == LAYER_GRU2;
 }
 
 bool layer_is_last(unsigned layer_idx) {
   assert(layer_idx != 0 && layer_idx <= N_LAYERS);
-  return T_tab[layer_idx-1] == LAYER_LAST;
+  return T_tab[layer_idx-1] == LAYER_DENSE;
 }
 
 // Simple log function, only works for powers of 2

@@ -4,7 +4,7 @@
 #include "Accel.h"
 #include "AccelSchedule.h"
 #include "AccelTest.h"
-#include "Dense.h"
+//#include "Dense.h"
 #include "ZipIO.h"
 #include "ParamIO.h"
 #include "DataIO.h"

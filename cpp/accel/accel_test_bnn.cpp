@@ -93,8 +93,8 @@ int main(int argc, char** argv) {
   }
 
   // allocate memories for data i/o for the accelerator
-  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );   
-  Word* data_o  = (Word*) MEM_ALLOC( DMEM_O_WORDS * sizeof(Word) );
+  Word* data_i  = (Word*) malloc( DMEM_WORDS * sizeof(Word) );   // ML: MEM_ALLOC-> malloc
+  Word* data_o  = (Word*) malloc( DMEM_O_WORDS * sizeof(Word) );
   if (!data_i || !data_o) {
     fprintf (stderr, "**** ERROR: Alloc failed in %s\n", __FILE__);
     return (-2);
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
   //--------------------------------------------------------------
   // Run RNN
   //--------------------------------------------------------------
-  printf ("debug");
+
   // ML: load an arbitrary input character [1, 0. 0, ..., 0]
   for (unsigned i = 0; i < VOCAB_SIZE/DATA_PER_WORD; ++i) {
     if (i == 0) {
@@ -170,8 +170,8 @@ int main(int argc, char** argv) {
   printf ("Total accel runtime = %10.4f seconds\n", total_time());
   printf ("\n");*/
 
-  MEM_FREE( data_o );
-  MEM_FREE( data_i );
+  free( data_o );
+  free( data_i );
   for (unsigned n = 0; n < N_LAYERS; ++n) {
     delete[] wt[n];
     delete[] b[n];

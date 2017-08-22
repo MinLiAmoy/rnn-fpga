@@ -2,7 +2,7 @@
 #define ACCEL_ACCEL_SCHEDULE_H
 
 #include <vector>
-#include "Accel.h"
+  #include "Accel.h"
 
 // Contains all info needed to invoke the accelerator once except
 // input/output data and its size which is handled separately
