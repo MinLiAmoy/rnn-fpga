@@ -136,7 +136,7 @@ void dense_layer(
       
     }
   } else {
-    for (unsigned n = 0; n < 2*N; n+=WORD_SIZE) {   // ML: compute reset gate and update gate
+    for (unsigned n = 0; n < 2*N; n+=WORD_SIZE) {   // ML: compute update gate and reset gate
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
         unsigned gate_idx = (n + nb) / N;
@@ -156,7 +156,7 @@ void dense_layer(
     for (unsigned n = 2*N; n < 3*N; n+=WORD_SIZE) {
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         for (unsigned i = M; i < M+N; i++) {
-          in[i] = in[i] * gate[0][n + nb];
+          in[i] = in[i] * gate[1][n + nb - 2*N]; // ML: hid_pre dotproduct by reset gate
         }
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
         unsigned gate_idx = (n + nb) / N;
@@ -187,11 +187,9 @@ void dense_layer(
       unsigned offset = n % DATA_PER_WORD;
       hidden_pre(15,0) = dmem[layer_idx+1][idx]((offset+1)*16-1, (offset)*16);
       // ML: new cell state
-      hidden = (1-gate[1][n]) * hidden_pre + gate[1][n]*gate[2][n];
+      hidden = (1-gate[0][n]) * hidden_pre + gate[0][n]*gate[2][n];
       dmem[layer_idx+1][idx]((offset+1)*16-1, offset*16) = hidden(15,0);
     }
-
-
   }
 
 
