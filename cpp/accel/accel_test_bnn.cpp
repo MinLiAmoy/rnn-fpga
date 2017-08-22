@@ -59,27 +59,17 @@ int main(int argc, char** argv) {
       for (unsigned w_l = 0; w_l < N_W_LAYERS; ++w_l) {
         // ML: set in_to weight and hid_to weight
         const float* weights_in = params.float_data(widx_tab[l*N_W_LAYERS*2 + 2*w_l]);
-        std::cout<< l << '/' <<N_W_LAYERS<<'\n';
-        std::cout<<params.array_size(widx_tab[l*N_W_LAYERS*2 + 2*w_l]);
-        std::cout<<'\n';
         const float* weights_hid = params.float_data(widx_tab[l*N_W_LAYERS*2 + 2*w_l +1]);
-        std::cout<<params.array_size(widx_tab[l*N_W_LAYERS*2 + 2*w_l+1]);
-        std::cout<<'\n';
-
         set_rnn_weight_array(wt[l], weights_in, weights_hid, l+1, w_l);
-
         // ML: set bias
         const float* bias = params.float_data(bidx_tab[l*N_W_LAYERS + w_l]);
-        std::cout<<params.array_size(bidx_tab[l*N_W_LAYERS + w_l])<<'\n';
         set_rnn_bias_array(b[l], bias, l+1, w_l);
       }
     } else {
 
       const float* weights = params.float_data(widx_tab[12]);
       set_dense_weight_array(wt[l], weights, l+1);
-      std::cout<<params.array_size(widx_tab[12])<<'\n';
       const float* bias = params.float_data(bidx_tab[6]);
-      std::cout<<params.array_size(bidx_tab[6])<<'\n';
       set_dense_bias_array(b[l], bias, l+1);
     }
 
@@ -118,7 +108,7 @@ int main(int argc, char** argv) {
 
   // ML: load an arbitrary input character [1, 0. 0, ..., 0]
   for (unsigned i = 0; i < VOCAB_SIZE/DATA_PER_WORD; ++i) {
-    if (i == 0) {
+    if (i == 4) {
       data_i[i] = 0;
       DATA start_seed = 1;
       data_i[i](15,0) = start_seed(15,0);
@@ -127,7 +117,6 @@ int main(int argc, char** argv) {
     }
   }
 
-  printf ("debug");
   for (unsigned n = 0; n < n_char; ++n) {
    
     //------------------------------------------------------------
@@ -136,7 +125,6 @@ int main(int argc, char** argv) {
     for (unsigned l = 1; l <= 3; ++l) {
       const unsigned M = M_tab[l-1];
       const unsigned N = N_tab[l-1];
-      printf ("debug");
       dense_layer(
         data_i, data_o,
         l-1,
