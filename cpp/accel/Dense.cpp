@@ -157,7 +157,7 @@ void dense_layer(
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         for (unsigned i = M; i < M+N; i++) {
           unsigned idx = i/DATA_PER_WORD;
-          unsigned off = i/DATA_PER_WORD;
+          unsigned off = i%DATA_PER_WORD;
           DATA temp;
           temp(15,0) = in[idx]((off+1)*16-1, off*16);
           temp = temp*gate[1][n + nb - 2*N];
