@@ -156,7 +156,12 @@ void dense_layer(
     for (unsigned n = 2*N; n < 3*N; n+=WORD_SIZE) {
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         for (unsigned i = M; i < M+N; i++) {
-          in[i] = in[i] * gate[1][n + nb - 2*N]; // ML: hid_pre dotproduct by reset gate
+          unsigned idx = i/DATA_PER_WORD;
+          unsigned off = i/DATA_PER_WORD;
+          Data temp;
+          temp(15,0) = in[idx]((off+1)*16-1, off*16);
+          temp = temp*gate[1][n + nb - 2*N];
+          in[idx]((off+1)*16-1, off*16) = temp(15,0); // ML: hid_pre dotproduct by reset gate
         }
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
         unsigned gate_idx = (n + nb) / N;
