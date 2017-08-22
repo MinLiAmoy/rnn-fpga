@@ -77,8 +77,9 @@ int main(int argc, char** argv) {
 
       const float* weights = params.float_data(widx_tab[12]);
       set_dense_weight_array(wt[l], weights, l+1);
-
+      std::cout<<params.array_size(widx_tab[12])<<'\n';
       const float* bias = params.float_data(bidx_tab[6]);
+      std::cout<<params.array_size(bidx_tab[6])<<'\n';
       set_dense_bias_array(b[l], bias, l+1);
     }
 
@@ -100,7 +101,7 @@ int main(int argc, char** argv) {
   }
 
   // allocate memories for data i/o for the accelerator
-  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );   // ML: MEM_ALLOC-> malloc
+  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );   
   Word* data_o  = (Word*) MEM_ALLOC( DMEM_O_WORDS * sizeof(Word) );
   if (!data_i || !data_o) {
     fprintf (stderr, "**** ERROR: Alloc failed in %s\n", __FILE__);
