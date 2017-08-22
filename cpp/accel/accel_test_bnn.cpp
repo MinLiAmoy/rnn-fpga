@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   // Load parameters
   printf ("## Loading parameters ##\n");
   Params params(get_root_dir() + "/params/rnn_parameters.zip");
-
+  
   // ---------------------------------------------------------------------
   // allocate and binarize all weights
   // ---------------------------------------------------------------------
@@ -93,8 +93,8 @@ int main(int argc, char** argv) {
   }
 
   // allocate memories for data i/o for the accelerator
-  Word* data_i  = (Word*) malloc( DMEM_WORDS * sizeof(Word) );   // ML: MEM_ALLOC-> malloc
-  Word* data_o  = (Word*) malloc( DMEM_O_WORDS * sizeof(Word) );
+  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );   // ML: MEM_ALLOC-> malloc
+  Word* data_o  = (Word*) MEM_ALLOC( DMEM_O_WORDS * sizeof(Word) );
   if (!data_i || !data_o) {
     fprintf (stderr, "**** ERROR: Alloc failed in %s\n", __FILE__);
     return (-2);
@@ -170,8 +170,8 @@ int main(int argc, char** argv) {
   printf ("Total accel runtime = %10.4f seconds\n", total_time());
   printf ("\n");*/
 
-  free( data_o );
-  free( data_i );
+  MEM_FREE( data_o );
+  MEM_FREE( data_i );
   for (unsigned n = 0; n < N_LAYERS; ++n) {
     delete[] wt[n];
     delete[] b[n];
