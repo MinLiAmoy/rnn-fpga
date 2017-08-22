@@ -23,8 +23,8 @@ int main(int argc, char** argv) {
 
   if (argc == 3) {
     Init = true;
-    printf("* Initial string is %s\n", str_init); 
     str_init = argv[2];   // *ML: cant loas text with ' '
+    printf("* Initial string is %s\n", str_init); 
   }
   // print some config numbers
   printf ("* WT_WORDS   = %u\n", WT_WORDS); 
