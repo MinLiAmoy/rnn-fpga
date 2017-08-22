@@ -59,11 +59,18 @@ int main(int argc, char** argv) {
       for (unsigned w_l = 0; w_l < N_W_LAYERS; ++w_l) {
         // ML: set in_to weight and hid_to weight
         const float* weights_in = params.float_data(widx_tab[l*N_W_LAYERS*2 + 2*w_l]);
+        std::cout<< l << '/' <<N_W_LAYERS<<'\n';
+        std::cout<<params.array_size(widx_tab[l*N_W_LAYERS*2 + 2*w_l]);
+        std::cout<<'\n';
         const float* weights_hid = params.float_data(widx_tab[l*N_W_LAYERS*2 + 2*w_l +1]);
+        std::cout<<params.array_size(widx_tab[l*N_W_LAYERS*2 + 2*w_l+1]);
+        std::cout<<'\n';
+
         set_rnn_weight_array(wt[l], weights_in, weights_hid, l+1, w_l);
 
         // ML: set bias
         const float* bias = params.float_data(bidx_tab[l*N_W_LAYERS + w_l]);
+        std::cout<<params.array_size(bidx_tab[l*N_W_LAYERS + w_l])<<'\n';
         set_rnn_bias_array(b[l], bias, l+1, w_l);
       }
     } else {

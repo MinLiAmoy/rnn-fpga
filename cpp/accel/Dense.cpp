@@ -68,7 +68,7 @@ DATA dotproduct_m(
 // ML: k, h is the coefficient of BNN!
 // ML: the size of in is M/DATA_PER_WORD = M/4 words; the size of out is N/DATA_PER_WORD!
 void dense_layer(
-    Word* data_i,
+    const Word* data_i,
     Word* data_o,
     unsigned layer_idx,
     const Address inputs_words,

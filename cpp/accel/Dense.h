@@ -19,7 +19,7 @@
 );*/
 
 void dense_layer(
-    Word* data_i,
+    const Word* data_i,
     Word* data_o,
     unsigned layer_idx,
     const Address inputs_words,
