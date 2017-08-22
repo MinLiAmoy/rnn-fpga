@@ -9,7 +9,7 @@
 
 // ML: num of layer of RNN
 const unsigned N_LAYERS = 3;
-// ML: num of weight arrays of every gate in rnn layer, which include ingate, forgetgate, cellgate, outgate
+// ML: num of weight arrays of every gate in rnn layer
 const unsigned N_W_LAYERS = 4;
 
 

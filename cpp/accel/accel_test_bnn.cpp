@@ -41,21 +41,19 @@ int main(int argc, char** argv) {
     const unsigned N = N_tab[l];
  
     if (layer_is_rnn(l+1)) {
-      wt[l] = new Word[(M+N)*4*N / WORD_SIZE];  // ML: RNN layers
+      wt[l] = new Word[(M+N)*4*N / WORD_SIZE];
       b[l] = new Word[4*N / WORD_SIZE];
     }
     else {
-      wt[l] = new Word[M*N / WORD_SIZE];    // ML: dense(output) layers
+      wt[l] = new Word[M*N / WORD_SIZE];    // ML: RNN layers
       b[l] = new Word[N / WORD_SIZE];
     }
-
     if (layer_is_rnn(l+1)) {
       for (unsigned w_l = 0; w_l < N_W_LAYERS; ++w_l) {
         // ML: set in_to weight and hid_to weight
         const float* weights_in = params.float_data(widx_tab[l*N_W_LAYERS*2 + 2*w_l]);
         const float* weights_hid = params.float_data(widx_tab[l*N_W_LAYERS*2 + 2*w_l +1]);
         set_rnn_weight_array(wt[l], weights_in, weights_hid, l+1, w_l);
-
         // ML: set bias
         const float* bias = params.float_data(bidx_tab[l*N_W_LAYERS + w_l]);
         set_rnn_bias_array(b[l], bias, l+1, w_l);
@@ -75,8 +73,6 @@ int main(int argc, char** argv) {
   // ---------------------------------------------------------------------
   // // compute accelerator schedule (divides up weights)
   // ---------------------------------------------------------------------
-
-  // ML: by now not divides up weights, just copy the weights to layer_sched[l][0].wt
   AccelSchedule layer_sched[N_LAYERS];    
   for (unsigned l = 0; l < N_LAYERS; ++l) {
     compute_accel_schedule(
@@ -87,7 +83,7 @@ int main(int argc, char** argv) {
   }
 
   // allocate memories for data i/o for the accelerator
-  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );   
+  Word* data_i  = (Word*) MEM_ALLOC( DMEM_WORDS * sizeof(Word) );   // ML: need to be modified!
   Word* data_o  = (Word*) MEM_ALLOC( DMEM_O_WORDS * sizeof(Word) );
   if (!data_i || !data_o) {
     fprintf (stderr, "**** ERROR: Alloc failed in %s\n", __FILE__);
