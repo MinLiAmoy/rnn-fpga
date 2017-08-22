@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   }
   const unsigned n_char = std::stoi(argv[1]);
 
-  printf ("*RNNs type: GRU");
+  printf ("*RNNs type: GRU\n");
   bool Init = false;
   char* str_init = NULL;
 
