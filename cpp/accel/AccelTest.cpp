@@ -97,6 +97,20 @@ void set_dense_bias_array(Word* b, const float* bias, unsigned layer_idx) {
   }
 }
 
+// ML: char to index(Word type)
+void set_char_to_word(Word* data, char in) {
+  for (unsigned i = 0; i < VOCAB_SIZE/DATA_PER_WORD; ++i) {
+    data[i] = 0;
+  }
+  for (unsigned i = 0; i <= VOCAB_SIZE; ++i) {
+    if (vocab[i] == in) {
+      DATA start_seed = 1;
+      data[i/DATA_PER_WORD]((i%DATA_PER_WORD+1)*16-1,(i%DATA_PER_WORD)*16) = start_seed(15,0);
+      break;
+    } 
+  }
+}
+
 
 /*
 //------------------------------------------------------------------------

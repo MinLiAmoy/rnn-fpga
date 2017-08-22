@@ -51,7 +51,7 @@ void set_rnn_weight_array(Word* w, const float* wts_in, const float* wts_hid, un
 void set_rnn_bias_array(Word* b, const float* bias, unsigned layer_idx, unsigned weight_idx);
 void set_dense_weight_array(Word* w, const float* wts, unsigned layer_idx);
 void set_dense_bias_array(Word* b, const float* bias, unsigned layer_idx);
-
+void set_char_to_word(Word* data, char in);
 
 /*
 void set_bnorm_array(Word* kh, const float* k, const float* h, unsigned layer_idx);

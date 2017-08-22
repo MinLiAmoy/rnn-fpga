@@ -14,10 +14,18 @@
 int main(int argc, char** argv) {
   if (argc < 2) {
     printf ("Give number of character to produce as 1st arg\n");
+    printf ("Give the initial srting as 2nd arg optional\n");
     return 0;
   }
   const unsigned n_char = std::stoi(argv[1]);
+  bool Init = false;
+  char* str_init = NULL;
 
+  if (argc == 3) {
+    Init = true;
+    printf("* Initial string is %s\n", str_init); 
+    str_init = argv[2];   // *ML: cant loas text with ' '
+  }
   // print some config numbers
   printf ("* WT_WORDS   = %u\n", WT_WORDS); 
   printf ("* BIAS_WORDS = %u\n", BIAS_WORDS);
@@ -91,6 +99,29 @@ int main(int argc, char** argv) {
 
   unsigned n_errors = 0;
 
+  printf("## Initialing the RNN\n");
+
+  if (Init) {
+    unsigned i = 0;
+    while (str_init[i] != '\0') {
+      set_char_to_word(data_i, str_init[i]);
+
+      for (unsigned l = 1; l <= 3; ++l) {
+        const unsigned M = M_tab[l-1];
+        const unsigned N = N_tab[l-1];
+
+        dense_layer(
+          data_i, data_o,
+          l-1,
+          (l==1) ? (64/DATA_PER_WORD) : 0,    // input_words
+          0,    // output_words = 0
+          layer_sched[l-1]
+        );  
+      }
+      i++;
+    }
+  }
+
   printf ("## Running RNN for %d characters\n", n_char);
 
   //--------------------------------------------------------------
@@ -120,7 +151,7 @@ int main(int argc, char** argv) {
       dense_layer(
         data_i, data_o,
         l-1,
-        (n==0 && l==1) ? (64/DATA_PER_WORD) : 0,    // input_words
+        (n==0 && l==1 && (~Init)) ? (64/DATA_PER_WORD) : 0,    // input_words
         (l==3) ? (64/DATA_PER_WORD) : 0,
         layer_sched[l-1]
       );  
@@ -152,6 +183,7 @@ int main(int argc, char** argv) {
     
   }
 
+  printf("\n");
   /*printf ("\n");
   printf ("Errors: %u (%4.2f%%)\n", n_errors, float(n_errors)*100/n_imgs);
   printf ("\n");
