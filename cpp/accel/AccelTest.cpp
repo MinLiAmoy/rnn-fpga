@@ -92,6 +92,7 @@ void set_dense_weight_array(Word* w, const float* wts, unsigned layer_idx) {
   const unsigned M = M_tab[layer_idx-1];
   const unsigned N = N_tab[layer_idx-1];
   unsigned w_idx = 0;
+  TwoBit wt;
   for (unsigned n = 0; n < N; ++n) {
     for (unsigned m = 0; m < M; m+=WORD_SIZE/WT_SIZE) {
       Word wrd = 0;
