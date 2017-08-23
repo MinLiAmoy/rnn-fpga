@@ -41,22 +41,26 @@ DATA dotproduct_m(
   DATA sum = 0;
 
   // Loop across in the inputs in batches of WORD_SIZE
-  for (unsigned m = 0; m < M; m+=WORD_SIZE) {
+  for (unsigned m = 0; m < M; m+=WORD_SIZE/WT_SIZE) {
 
-    DATA in_wrd[WORD_SIZE];
-    for (unsigned i = 0; i < WORD_SIZE; i+=DATA_PER_WORD) {
+    DATA in_wrd[WORD_SIZE/WT_SIZE]; // ML: size = 32
+    TwoBit wt;
+    for (unsigned i = 0; i < WORD_SIZE/WT_SIZE; i+=DATA_PER_WORD) {
       in_wrd[i](15,0)   = in[(m + i)/4](15,0);
       in_wrd[i+1](15,0) = in[(m + i)/4](31,16);
       in_wrd[i+2](15,0) = in[(m + i)/4](47,32);
       in_wrd[i+3](15,0) = in[(m + i)/4](63,48);
     }
-    const Word wt_wrd = w[(n*M+m)/WORD_SIZE];
+    const Word wt_wrd = w[(n*M+m)*WT_SIZE/WORD_SIZE];
 
-    for (unsigned i = 0; i < WORD_SIZE; ++i) {
-      if (wt_wrd[i] > 0)
+    for (unsigned i = 0; i < WORD_SIZE/WT_SIZE; ++i) {
+      wt(1,0) = wt_wrd(2*i+1,2*i);
+      if (wt > 0)
         sum += in_wrd[i];
-      else
+      else if (wt < 0)
         sum -= in_wrd[i];
+      else
+        continue;
     }
   }
   return sum;

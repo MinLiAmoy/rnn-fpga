@@ -36,18 +36,31 @@ void set_rnn_weight_array(Word* w, const float* wts_in, const float* wts_hid, un
   const unsigned N = N_tab[layer_idx-1];
   unsigned w_idx = 0;
   for (unsigned n = 0; n < N; ++n) {
-    for (unsigned m = 0; m < M + N; m+=WORD_SIZE) {
+    for (unsigned m = 0; m < M + N; m+=WORD_SIZE/WT_SIZE) {
       Word wrd = 0;
+      TwoBit wt = 0;
       if (m < M) {
-        for (unsigned b = 0; b < WORD_SIZE; ++b) {
-          wrd[b] = ((wts_in[(m+b)*N+n] < 0) ? 0 : 1);
+        for (unsigned b = 0; b < WORD_SIZE/WT_SIZE; ++b) {
+          if (wts_in[(m+b)*N+n] <= -0.5)
+            wt = -1;
+          else if (wts_in[(m+b)*N+n] > -0.5 && wts_in[(m+b)*N+n] <= 0.5)
+            wt = 0;
+          else
+            wt = 1;
+          wrd(2*b+1, 2*b) = wt;
         }
       } else {
-        for (unsigned b = 0; b < WORD_SIZE; ++b) {
-          wrd[b] = ((wts_hid[(m-M+b)*N+n] < 0) ? 0 : 1);
+        for (unsigned b = 0; b < WORD_SIZE/WT_SIZE; ++b) {
+          if (wts_hid[(m+b)*N+n] <= -0.5)
+            wt = -1;
+          else if (wts_hid[(m+b)*N+n] > -0.5 && wts_in[(m+b)*N+n] <= 0.5)
+            wt = 0;
+          else
+            wt = 1;
+          wrd(2*b+1, 2*b) = wt;        
         }
       }
-      w[weight_idx*(M+N)*N/WORD_SIZE + w_idx] = wrd;
+      w[weight_idx*(M+N)*N*WT_SIZE/WORD_SIZE + w_idx] = wrd;
       ++w_idx;
     }
   }
@@ -57,11 +70,18 @@ void set_rnn_bias_array(Word* b, const float* bias, unsigned layer_idx, unsigned
   const unsigned N = N_tab[layer_idx-1];
   unsigned b_idx = 0;
   Word wrd = 0;
-  for (unsigned n = 0; n < N; n+=WORD_SIZE) {
-    for (unsigned b = 0; b < WORD_SIZE; ++b) {
-      wrd[b] = ((bias[n + b] < 0) ? 0 : 1);
+  TwoBit bs = 0;
+  for (unsigned n = 0; n < N; n+=WORD_SIZE/WT_SIZE) {
+    for (unsigned b = 0; b < WORD_SIZE/WT_SIZE; ++b) {
+      if (bias[n + b] <= -0.5)
+        bs = -1;
+      else if (bias[n + b] > -0.5 && bias[n + b] <= 0.5)
+        bs = 0;
+      else
+        bs = 1;
+      wrd(2*b+1, 2*b) = bs;
     }
-    b[weight_idx*N/WORD_SIZE + b_idx] = wrd;
+    b[weight_idx*N*WT_SIZE/WORD_SIZE + b_idx] = wrd;
     ++b_idx;
   }
 }
@@ -72,12 +92,19 @@ void set_dense_weight_array(Word* w, const float* wts, unsigned layer_idx) {
   const unsigned M = M_tab[layer_idx-1];
   const unsigned N = N_tab[layer_idx-1];
   unsigned w_idx = 0;
+  TwoBit wt;
   for (unsigned n = 0; n < N; ++n) {
-    for (unsigned m = 0; m < M; m+=WORD_SIZE) {
+    for (unsigned m = 0; m < M; m+=WORD_SIZE/WT_SIZE) {
       Word wrd = 0;
-      for (unsigned b = 0; b < WORD_SIZE; ++b) {
-        wrd[b] = ((wts[(m+b)*N+n] < 0) ? 0 : 1);
-      }   
+      for (unsigned b = 0; b < WORD_SIZE/WT_SIZE; ++b) {
+        if (wts_in[(m+b)*N+n] <= -0.5)
+          wt = -1;
+        else if (wts_in[(m+b)*N+n] > -0.5 && wts_in[(m+b)*N+n] <= 0.5)
+          wt = 0;
+        else
+          wt = 1;
+        wrd(2*b+1, 2*b) = wt;
+      }
       w[w_idx] = wrd;
       ++w_idx;
     }
@@ -88,9 +115,16 @@ void set_dense_bias_array(Word* b, const float* bias, unsigned layer_idx) {
   const unsigned N = N_tab[layer_idx-1];
   unsigned b_idx = 0;
   Word wrd = 0;
-  for (unsigned n = 0; n < N; n+= WORD_SIZE) {
-    for (unsigned b = 0; b < WORD_SIZE; ++b) {
-      wrd[b] = ((bias[n + b] < 0) ? 0 : 1);
+  TwoBit bs = 0;
+  for (unsigned n = 0; n < N; n+=WORD_SIZE/WT_SIZE) {
+    for (unsigned b = 0; b < WORD_SIZE/WT_SIZE; ++b) {
+      if (bias[n + b] <= -0.5)
+        bs = -1;
+      else if (bias[n + b] > -0.5 && bias[n + b] <= 0.5)
+        bs = 0;
+      else
+        bs = 1;
+      wrd(2*b+1, 2*b) = bs;
     }
     b[b_idx] = wrd;
     ++b_idx;

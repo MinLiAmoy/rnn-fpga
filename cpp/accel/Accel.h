@@ -28,6 +28,7 @@ const unsigned HID_SIZE = 128;
 const unsigned DATA_SIZE = 16;
 const unsigned DATA_PER_WORD = 4;
 const unsigned VOCAB_SIZE = 64;
+const unsigned WT_SIZE = 2;
 //
 
 const unsigned WORD_SIZE = 64;
@@ -36,8 +37,8 @@ const unsigned WT_L = (128 + 128)* 3 * 128; // parameter to control wt mem size
 const unsigned BIAS_L = 128 * 3; // ML: parameter to control bias memsize
 
 
-const unsigned WT_WORDS = WT_L / WORD_SIZE; // ML: beyond the mem on chip?
-const unsigned BIAS_WORDS = BIAS_L / WORD_SIZE; 
+const unsigned WT_WORDS = WT_L * WT_SIZE / WORD_SIZE; // ML: beyond the mem on chip?
+const unsigned BIAS_WORDS = BIAS_L * WT_SIZE / WORD_SIZE; 
 
 
 // ML: mem of input data and output data
