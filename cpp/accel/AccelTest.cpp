@@ -99,7 +99,7 @@ void set_dense_weight_array(Word* w, const float* wts, unsigned layer_idx) {
       for (unsigned b = 0; b < WORD_SIZE/WT_SIZE; ++b) {
         if (wts[(m+b)*N+n] <= -0.5)
           wt = -1;
-        else if (wts[(m+b)*N+n] > -0.5 && wts_in[(m+b)*N+n] <= 0.5)
+        else if (wts[(m+b)*N+n] > -0.5 && wts[(m+b)*N+n] <= 0.5)
           wt = 0;
         else
           wt = 1;
