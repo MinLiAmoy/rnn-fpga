@@ -26,6 +26,10 @@ int main(int argc, char** argv) {
     str_init = argv[2];   // *ML: cant loas text with ' '
     printf("* Initial string is %s\n", str_init); 
   }
+
+  printf("RNN type: LSTM\n");
+  printf("rounding method: Tenary\n");
+
   // print some config numbers
   printf ("* WT_WORDS   = %u\n", WT_WORDS); 
   printf ("* BIAS_WORDS = %u\n", BIAS_WORDS);
@@ -49,12 +53,12 @@ int main(int argc, char** argv) {
     const unsigned N = N_tab[l];
  
     if (layer_is_rnn(l+1)) {
-      wt[l] = new Word[(M+N)*4*N / WORD_SIZE];
-      b[l] = new Word[4*N / WORD_SIZE];
+      wt[l] = new Word[(M+N)*4*N * WT_SIZE / WORD_SIZE];
+      b[l] = new Word[4*N * WT_SIZE / WORD_SIZE];
     }
     else {
-      wt[l] = new Word[M*N / WORD_SIZE];    // ML: RNN layers
-      b[l] = new Word[N / WORD_SIZE];
+      wt[l] = new Word[M*N * WT_SIZE / WORD_SIZE];    // ML: RNN layers
+      b[l] = new Word[N * WT_SIZE / WORD_SIZE];
     }
     if (layer_is_rnn(l+1)) {
       for (unsigned w_l = 0; w_l < N_W_LAYERS; ++w_l) {
