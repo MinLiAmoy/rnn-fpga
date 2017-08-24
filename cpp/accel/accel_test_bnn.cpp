@@ -55,12 +55,12 @@ int main(int argc, char** argv) {
     const unsigned N = N_tab[l];
  
     if (layer_is_rnn(l+1)) {
-      wt[l] = new Word[(M+N)*3*N / WORD_SIZE];  // ML: RNN layers
-      b[l] = new Word[3*N / WORD_SIZE];
+      wt[l] = new Word[(M+N)*3*N * WT_SIZE/ WORD_SIZE];  // ML: RNN layers
+      b[l] = new Word[3*N * WT_SIZE / WORD_SIZE];
     }
     else {
-      wt[l] = new Word[M*N / WORD_SIZE];    // ML: dense(output) layers
-      b[l] = new Word[N / WORD_SIZE];
+      wt[l] = new Word[M*N * WT_SIZE/ WORD_SIZE];    // ML: dense(output) layers
+      b[l] = new Word[N*WT_SIZE / WORD_SIZE];
     }
 
     if (layer_is_rnn(l+1)) {
