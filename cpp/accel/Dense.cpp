@@ -72,11 +72,10 @@ DATA dotproduct_m(
 
 
 void dense_layer(
-    const Word* data_i,
-    Word* data_o,
+    Word data_i[DMEM_WORDS],
+    Word data_o[DMEM_O_WORDS],
     unsigned layer_idx,
-    const Address inputs_words,
-    const Address outputs_words,
+    const bool inputs_words,
     const Address n_inputs,
     const Address n_outputs,
     Word wt[WT_WORDS],

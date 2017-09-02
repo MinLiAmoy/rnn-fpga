@@ -114,8 +114,7 @@ int main(int argc, char** argv) {
         dense_layer(
           data_i, data_o,
           l-1,
-          (l==1) ? (64/DATA_PER_WORD) : 0,    // input_words
-          0,    // output_words = 0
+          (l==1) ? 1 : 0,    // input_words
           layer_sched[l][0].n_inputs,
           layer_sched[l][0].n_outputs,
           layer_sched[l][0].wt,
@@ -155,8 +154,7 @@ int main(int argc, char** argv) {
       dense_layer(
         data_i, data_o,
         l-1,
-        (n==0 && l==1 && (~Init)) ? (64/DATA_PER_WORD) : 0,    // input_words
-        (l==3) ? (64/DATA_PER_WORD) : 0,
+        (n==0 && l==1 && (~Init)) ? 1 : 0,    // input_words
         layer_sched[l][0].n_inputs,
         layer_sched[l][0].n_outputs,
         layer_sched[l][0].wt,
