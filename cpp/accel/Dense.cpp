@@ -32,8 +32,8 @@ DATA tanh(
 
 
 DATA dotproduct_m(
-    const Word* in,
-    const Word* w,
+    const Word in[2*HID_SIZE],
+    const Word w[WT_WORDS],
     const unsigned M,
     const unsigned n
 ) {
@@ -77,15 +77,18 @@ void dense_layer(
     unsigned layer_idx,
     const Address inputs_words,
     const Address outputs_words,
-    AccelSchedule& s 
+    const Address n_inputs,
+    const Address n_outputs,
+    Word wt[WT_WORDS],
+    Word b[BIAS_WORDS]
 ) {
   //t_dense.start();
   static Word dmem[5][HID_SIZE/DATA_PER_WORD] = {0}; // ML: sequence: input/output, hid1, cell1, hid2, cell2
 
   
 
-  unsigned M = s[0].n_inputs;
-  unsigned N = s[0].n_outputs;
+  Address M = n_inputs;
+  Address N = n_outputs;
 
   //ap_uint<1> d_i_idx = dmem_mode;
   //ap_uint<1> d_o_idx = ~dmem_mode;
@@ -124,10 +127,10 @@ void dense_layer(
 
   LOOP_WT_I:
   for (unsigned j = 0; j < WT_WORDS; ++j)
-    wt_i[j] = s[0].wt[j];
+    wt_i[j] = wt[j];
   LOOP_B_I:
   for (unsigned j = 0; j < BIAS_WORDS; ++j)
-    b_i[j] = s[0].b[j];
+    b_i[j] = b[j];
 
 
   if (layer_idx == LAYER_LAST){

@@ -3,7 +3,7 @@ include ../../Makefile.inc
 CFLAGS:=-DHLS_COMPILE -I../../utils $(CFLAGS)
 SLDFLAGS:=-DHLS_COMPILE -L. -lSdsCraftUtils -L./libhf_minizip -lminizip -laes -lz
 
-SDSFLAGS=-sds-pf zed -dmclkid 1 -sds-hw top Accel.cpp -clkid 1 -hls-tcl sds.tcl -sds-end
+SDSFLAGS=-sds-pf zed -dmclkid 1 -sds-hw dense_layer Dense.cpp -clkid 1 -hls-tcl sds.tcl -sds-end
 CXX=sds++ $(SDSFLAGS)
 
 # HDR are pure headers

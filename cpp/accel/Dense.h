@@ -30,16 +30,19 @@
 #pragma SDS data access_pattern(data_i:SEQUENTIAL, data_o:SEQUENTIAL)
 #pragma SDS data mem_attribute(data_i:PHYSICAL_CONTIGUOUS, data_o:PHYSICAL_CONTIGUOUS)
 #pragma SDS data data_mover(data_i:AXIDMA_SIMPLE, data_o:AXIDMA_SIMPLE)
-//#pragma SDS data access_pattern(s[0].wt:SEQUENTIAL, s[0].b:SEQUENTIAL)
-//#pragma SDS data mem_attribute(s[0].wt:PHYSICAL_CONTIGUOUS, s[0].b:PHYSICAL_CONTIGUOUS)
-//#pragma SDS data data_mover(s[0].wt:AXIDMA_SIMPLE, s[0].b:AXIDMA_SIMPLE)
+#pragma SDS data access_pattern(wt:SEQUENTIAL, b:SEQUENTIAL)
+#pragma SDS data mem_attribute(wt:PHYSICAL_CONTIGUOUS, b:PHYSICAL_CONTIGUOUS)
+#pragma SDS data data_mover(wt:AXIDMA_SIMPLE, b:AXIDMA_SIMPLE)
 void dense_layer(
     const Word* data_i,
     Word* data_o,
     unsigned layer_idx,
     const Address inputs_words,
     const Address outputs_words,
-    AccelSchedule& s 
+    const Address n_inputs,
+    const Address n_outputs,
+    Word wt[WT_WORDS],
+    Word b[BIAS_WORDS]
 );
 
 

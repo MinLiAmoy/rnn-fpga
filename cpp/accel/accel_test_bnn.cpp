@@ -110,12 +110,16 @@ int main(int argc, char** argv) {
         const unsigned M = M_tab[l-1];
         const unsigned N = N_tab[l-1];
 
+
         dense_layer(
           data_i, data_o,
           l-1,
           (l==1) ? (64/DATA_PER_WORD) : 0,    // input_words
           0,    // output_words = 0
-          layer_sched[l-1]
+          layer_sched[l][0].n_inputs,
+          layer_sched[l][0].n_outputs,
+          layer_sched[l][0].wt,
+          layer_sched[l][0].b
         );  
       }
       i++;
@@ -153,7 +157,10 @@ int main(int argc, char** argv) {
         l-1,
         (n==0 && l==1 && (~Init)) ? (64/DATA_PER_WORD) : 0,    // input_words
         (l==3) ? (64/DATA_PER_WORD) : 0,
-        layer_sched[l-1]
+        layer_sched[l][0].n_inputs,
+        layer_sched[l][0].n_outputs,
+        layer_sched[l][0].wt,
+        layer_sched[l][0].b
       );  
     }
 
