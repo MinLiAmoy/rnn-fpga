@@ -17,14 +17,22 @@
     const unsigned M,
     const unsigned N
 );*/
+#ifdef __SDSCC__
+  #include "sds_lib.h"
+  #define MEM_ALLOC(size) sds_alloc(size)
+  #define MEM_FREE(ptr) sds_free(ptr)
+#else
+  #define MEM_ALLOC(size) malloc(size)
+  #define MEM_FREE(ptr) free(ptr)
+#endif
 
 #pragma SDS data copy(data_i[0:input_words], data_o[0:output_words])
 #pragma SDS data access_pattern(data_i:SEQUENTIAL, data_o:SEQUENTIAL)
 #pragma SDS data mem_attribute(data_i:PHYSICAL_CONTIGUOUS, data_o:PHYSICAL_CONTIGUOUS)
 #pragma SDS data data_mover(data_i:AXIDMA_SIMPLE, data_o:AXIDMA_SIMPLE)
-#pragma SDS data access_pattern(s[0].wt:SEQUENTIAL, s[0].b:SEQUENTIAL)
-#pragma SDS data mem_attribute(s[0].wt:PHYSICAL_CONTIGUOUS, s[0].b:PHYSICAL_CONTIGUOUS)
-#pragma SDS data data_mover(s[0].wt:AXIDMA_SIMPLE, s[0].b:AXIDMA_SIMPLE)
+//#pragma SDS data access_pattern(s[0].wt:SEQUENTIAL, s[0].b:SEQUENTIAL)
+//#pragma SDS data mem_attribute(s[0].wt:PHYSICAL_CONTIGUOUS, s[0].b:PHYSICAL_CONTIGUOUS)
+//#pragma SDS data data_mover(s[0].wt:AXIDMA_SIMPLE, s[0].b:AXIDMA_SIMPLE)
 void dense_layer(
     const Word* data_i,
     Word* data_o,

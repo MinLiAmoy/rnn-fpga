@@ -1,8 +1,8 @@
 set rootdir $::env(CRAFT_BNN_ROOT)
 source $rootdir/cpp/accel/opt.tcl
 
-set_directive_interface -mode ap_fifo "dense_layer" s[0].wt
-set_directive_interface -mode ap_fifo "dense_layer" s[0].b
+#set_directive_interface -mode ap_fifo "dense_layer" s[0].wt
+#set_directive_interface -mode ap_fifo "dense_layer" s[0].b
 set_directive_interface -mode ap_fifo "dense_layer" data_i
 set_directive_interface -mode ap_fifo "dense_layer" data_o
 

@@ -10,14 +10,14 @@
 #include "Debug.h"
 #include "Common.h"
 
-#ifdef __SDSCC__
+/*#ifdef __SDSCC__
   #include "sds_lib.h"
   #define MEM_ALLOC(size) sds_alloc(size)
   #define MEM_FREE(ptr) sds_free(ptr)
 #else
   #define MEM_ALLOC(size) malloc(size)
   #define MEM_FREE(ptr) free(ptr)
-#endif
+#endif*/
 
 //-------------------------------------------------------------------
 // Constants

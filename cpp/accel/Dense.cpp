@@ -18,7 +18,7 @@ DATA sigmoid(
   const DATA in
   ) {
   DATA out;
-  out = 1/(1+exp(-in));
+  out = 1/(1+hls::exp((ap_fixed<16,8>) in));
   return out;
 }
 
@@ -26,7 +26,7 @@ DATA tanh(
   const DATA in
   ) {
   DATA out;
-  out = (exp(in) - exp(-in)) / (exp(in) + exp(-in));
+  out = (hls::exp((ap_fixed<16,8>) in) - hls::exp((ap_fixed<16,8>) -in)) / (hls::exp((ap_fixed<16,8>) in) + hls::exp((ap_fixed<16,8>) -in));
   return out;
 }
 
@@ -39,6 +39,7 @@ DATA dotproduct_m(
 ) {
   assert (M % WORD_SIZE == 0);
   DATA sum = 0;
+  static Word wt_wrd;
 
   // Loop across in the inputs in batches of WORD_SIZE
   for (unsigned m = 0; m < M; m+=WORD_SIZE) {
@@ -50,7 +51,7 @@ DATA dotproduct_m(
       in_wrd[i+2](15,0) = in[(m + i)/4](47,32);
       in_wrd[i+3](15,0) = in[(m + i)/4](63,48);
     }
-    const Word wt_wrd = w[(n*M+m)/WORD_SIZE];
+    wt_wrd = w[(n*M+m)/WORD_SIZE];
 
     for (unsigned i = 0; i < WORD_SIZE; ++i) {
       if (wt_wrd[i] > 0)
@@ -89,8 +90,8 @@ void dense_layer(
   //ap_uint<1> d_i_idx = dmem_mode;
   //ap_uint<1> d_o_idx = ~dmem_mode;
 
-  Word in[(M+N)/DATA_PER_WORD];
-  DATA gate[4][N];  // ML: input, forget, cell(tanh), output
+  static Word in[2*HID_SIZE/DATA_PER_WORD];
+  static DATA gate[4][HID_SIZE];  // ML: input, forget, cell(tanh), output
 
   if (layer_idx < 2) {
     LOOP_DMEM_I:
@@ -118,8 +119,8 @@ void dense_layer(
     }
   }
   
-  static Word* wt_i = (Word*) MEM_ALLOC( WT_WORDS*sizeof(Word));
-  static Word* b_i = (Word*) MEM_ALLOC( BIAS_WORDS*sizeof(Word));
+  static Word wt_i[WT_WORDS] = {0};
+  static Word b_i[BIAS_WORDS] = {0};
 
   LOOP_WT_I:
   for (unsigned j = 0; j < WT_WORDS; ++j)
@@ -180,7 +181,7 @@ void dense_layer(
       }
     }
 
-    LOOP_DMEM
+    LOOP_DMEM:
     for (unsigned n = 0; n < N; n++) {
       DATA cell;
       DATA cell_pre;
