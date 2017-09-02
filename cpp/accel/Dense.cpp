@@ -67,6 +67,9 @@ DATA dotproduct_m(
 // -----------------------------------------------------------------------
 // ML: k, h is the coefficient of BNN!
 // ML: the size of in is M/DATA_PER_WORD = M/4 words; the size of out is N/DATA_PER_WORD!
+
+
+
 void dense_layer(
     const Word* data_i,
     Word* data_o,
@@ -90,6 +93,7 @@ void dense_layer(
   DATA gate[4][N];  // ML: input, forget, cell(tanh), output
 
   if (layer_idx < 2) {
+    LOOP_DMEM_I:
     for (unsigned i = 0; i < M+N; i+= DATA_PER_WORD) {
       if ((i < M) && (layer_idx == 0) && (inputs_words != 0) ) {
         in[i/DATA_PER_WORD] = data_i[i/DATA_PER_WORD];
@@ -108,6 +112,7 @@ void dense_layer(
       }
     }
   } else {
+    LOOP_DMEM_II:
     for (unsigned i = 0; i < M; i+= DATA_PER_WORD) {
       in[i/DATA_PER_WORD] = dmem[3][i/DATA_PER_WORD];
     }
@@ -116,19 +121,24 @@ void dense_layer(
   static Word* wt_i = (Word*) MEM_ALLOC( WT_WORDS*sizeof(Word));
   static Word* b_i = (Word*) MEM_ALLOC( BIAS_WORDS*sizeof(Word));
 
+  LOOP_WT_I:
   for (unsigned j = 0; j < WT_WORDS; ++j)
     wt_i[j] = s[0].wt[j];
+  LOOP_B_I:
   for (unsigned j = 0; j < BIAS_WORDS; ++j)
     b_i[j] = s[0].b[j];
 
 
   if (layer_idx == LAYER_LAST){
+    LOOP_DENSE_O:
     for (unsigned n = 0; n < N; n+=WORD_SIZE) {
       Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+      LOOP_DENSE_I:
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M, n+nb);
         out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16) = sum(15,0);
       }
+      LOOP_DMEM_O:
       for (unsigned i = 0; i < WORD_SIZE / DATA_PER_WORD; ++i){
         data_o[n/DATA_PER_WORD + i] = out_wrd[i];
         dmem[0][n/DATA_PER_WORD + i] = out_wrd[i]; // ML: dont need another data buffer?
@@ -136,8 +146,10 @@ void dense_layer(
       
     }
   } else {
+    LOOP_RNN_O:
     for (unsigned n = 0; n < 4*N; n+=WORD_SIZE) {
       //Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+      LOOP_RNN_I:
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
         //out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16-1) = sum(15,0);
@@ -152,6 +164,7 @@ void dense_layer(
       
     }
 
+    LOOP_ACT:
     for (unsigned n = 0; n < 4*N; n++) {
       unsigned gate_idx = n / N;
       unsigned gate_off = n % N;
@@ -167,6 +180,7 @@ void dense_layer(
       }
     }
 
+    LOOP_DMEM
     for (unsigned n = 0; n < N; n++) {
       DATA cell;
       DATA cell_pre;
