@@ -145,7 +145,7 @@ void dense_layer(
       
     }
   } else {
-    LOOP_RNN_O:Ï
+    LOOP_RNN_O:
     for (unsigned n = 0; n < 2*N; n+=WORD_SIZE) {   // ML: compute update gate and reset gate
       LOOP_RNN_I:
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
