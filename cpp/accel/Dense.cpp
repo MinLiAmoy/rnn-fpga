@@ -18,7 +18,7 @@ DATA sigmoid(
   const DATA in
   ) {
   DATA out;
-  out = 1/(1+exp(-in));
+  out = 1/(1+hls::exp((ap_fixed<16,8>) -in));
   return out;
 }
 
@@ -26,14 +26,14 @@ DATA tanh(
   const DATA in
   ) {
   DATA out;
-  out = (exp(in) - exp(-in)) / (exp(in) + exp(-in));
+  out = (hls::exp((ap_fixed<16,8>) in) - hls::exp((ap_fixed<16,8>) -in)) / (hls::exp((ap_fixed<16,8>) in) + hls::exp((ap_fixed<16,8>) -in));
   return out;
 }
 
 
 DATA dotproduct_m(
-    const Word* in,
-    const Word* w,
+    const Word in[2*HID_SIZE],
+    const Word w[WT_WORDS],
     const unsigned M,
     const unsigned n
 ) {
@@ -68,28 +68,31 @@ DATA dotproduct_m(
 // ML: k, h is the coefficient of BNN!
 // ML: the size of in is M/DATA_PER_WORD = M/4 words; the size of out is N/DATA_PER_WORD!
 void dense_layer(
-    const Word* data_i,
-    Word* data_o,
+    Word data_i[DMEM_WORDS],
+    Word data_o[DMEM_O_WORDS],
     unsigned layer_idx,
-    const Address inputs_words,
-    const Address outputs_words,
-    AccelSchedule& s 
+    const bool inputs_words,
+    const Address n_inputs,
+    const Address n_outputs,
+    Word wt[WT_WORDS],
+    Word b[BIAS_WORDS]
 ) {
   //t_dense.start();
   static Word dmem[3][HID_SIZE/DATA_PER_WORD] = {0}; // ML: sequence: input/output, hid1, hid2
 
   
 
-  unsigned M = s[0].n_inputs;
-  unsigned N = s[0].n_outputs;
+  unsigned M = n_inputs;
+  unsigned N = n_outputs;
 
   //ap_uint<1> d_i_idx = dmem_mode;
   //ap_uint<1> d_o_idx = ~dmem_mode;
 
-  Word in[(M+N)/DATA_PER_WORD];
-  DATA gate[3][N];  // ML: update gate, reset gate, hidden update gate
+  static Word in[2*HID_SIZE/DATA_PER_WORD];
+  static DATA gate[3][HID_SIZE];  // ML: update gate, reset gate, hidden update gate
 
   if (layer_idx < 2) {
+    LOOP_DMEM_I:
     for (unsigned i = 0; i < M+N; i+= DATA_PER_WORD) {
       if ((i < M) && (layer_idx == 0) && (inputs_words != 0) ) {
         in[i/DATA_PER_WORD] = data_i[i/DATA_PER_WORD];
@@ -108,27 +111,33 @@ void dense_layer(
       }
     }
   } else {
+    LOOP_DMEM_II:
     for (unsigned i = 0; i < M; i+= DATA_PER_WORD) {
       in[i/DATA_PER_WORD] = dmem[2][i/DATA_PER_WORD];
     }
   }
   
-  static Word* wt_i = (Word*) MEM_ALLOC( WT_WORDS*sizeof(Word));
-  static Word* b_i = (Word*) MEM_ALLOC( BIAS_WORDS*sizeof(Word));
+  static Word wt_i[WT_WORDS] = {0};
+  static Word b_i[BIAS_WORDS] = {0};
 
+  LOOP_WT_I:
   for (unsigned j = 0; j < WT_WORDS; ++j)
-    wt_i[j] = s[0].wt[j];
+    wt_i[j] = wt[j];
+  LOOP_B_I:
   for (unsigned j = 0; j < BIAS_WORDS; ++j)
-    b_i[j] = s[0].b[j];
+    b_i[j] = b[j];
 
 
   if (layer_idx == LAYER_DENSE){
+    LOOP_DENSE_O:
     for (unsigned n = 0; n < N; n+=WORD_SIZE) {
       Word out_wrd[WORD_SIZE/DATA_PER_WORD] = {0};
+      LOOP_DENSE_I:
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M, n+nb);
         out_wrd[nb/DATA_PER_WORD]((nb%DATA_PER_WORD+1)*16-1, (nb%DATA_PER_WORD)*16) = sum(15,0);
       }
+      LOOP_DMEM_O:
       for (unsigned i = 0; i < WORD_SIZE / DATA_PER_WORD; ++i){
         data_o[n/DATA_PER_WORD + i] = out_wrd[i];
         dmem[0][n/DATA_PER_WORD + i] = out_wrd[i]; // ML: dont need another data buffer?
@@ -136,7 +145,9 @@ void dense_layer(
       
     }
   } else {
+    LOOP_RNN_O:Ï
     for (unsigned n = 0; n < 2*N; n+=WORD_SIZE) {   // ML: compute update gate and reset gate
+      LOOP_RNN_I:
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
         DATA sum = dotproduct_m(in, wt_i, M+N, n+nb);
         unsigned gate_idx = (n + nb) / N;
@@ -153,8 +164,11 @@ void dense_layer(
       
     }
 
+    LOOP_HIDUPDATE:
     for (unsigned n = 2*N; n < 3*N; n+=WORD_SIZE) {
+      LOOP_H_O:
       for (unsigned nb = 0; nb < WORD_SIZE; ++nb) {
+        LOOP_H_I:
         for (unsigned i = M; i < M+N; i++) {
           unsigned idx = i/DATA_PER_WORD;
           unsigned off = i%DATA_PER_WORD;
@@ -184,6 +198,7 @@ void dense_layer(
       gate[gate_idx][gate_off] = temp;
     }*/
 
+    LOOP_DMEM:
     for (unsigned n = 0; n < N; n++) {
       DATA hidden;
       DATA hidden_pre;
